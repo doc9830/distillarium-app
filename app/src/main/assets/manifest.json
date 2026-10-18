@@ -1,20 +1,85 @@
 {
-  "contentVersion": "2026.10.1",
+  "contentVersion": "2026.10.3",
   "schemaVersion": 1,
   "minAppVersion": "0.1.0",
   "released": "2026-10-18",
-  "packSize": 75796,
-  "packSha256": "09df4e19ea905cd3d16d0530a8e358cf5feb5651d0a4c9aba5936042d4bed7dc",
+  "packSize": 90513,
+  "packSha256": "840d22cbdaca6180e2de505fb2612ffae093521e057800328e5d87446986ace6",
   "files": [
+    {
+      "path": "calculators.json",
+      "sha256": "c0a1da301ee1cacf1f3c02d71efa87b77bf87169ffac4bae60d3abc13a8efc96",
+      "size": 2024
+    },
+    {
+      "path": "recipes/apple-wine-sweet.json",
+      "sha256": "ed2c95d3418592513184d34fdbed152c922009dc5a1d09b0415bdd0acbc2cc0f",
+      "size": 2012
+    },
+    {
+      "path": "recipes/cider-25.json",
+      "sha256": "2bc51a57996313f1b74a0fde34b59e1c6f42429b0552e548115de58bca9973e4",
+      "size": 1767
+    },
+    {
+      "path": "recipes/sugar-wash-classic.json",
+      "sha256": "a9ffd69062602a882908cd8c9c2b8671c36dff4542c7286a1ed8b99ff67578b7",
+      "size": 1420
+    },
+    {
+      "path": "recipes/sugar-wash-spirit-yeast.json",
+      "sha256": "b3541c5f4a7e1dd800c284ce2ce84553348aac398f72525074e06e742e3b0436",
+      "size": 1559
+    },
+    {
+      "path": "recipes/sugar-wash-turbo.json",
+      "sha256": "3820b64b73a58fc8f50fe222ca26387b37ab954006ed884af4a31930cbc6842d",
+      "size": 1361
+    },
+    {
+      "path": "recipes/wheat-sour-starter.json",
+      "sha256": "48bcd02a8713106fa72832296ec55c094dc03e654ae00db6003686272e6e310b",
+      "size": 1353
+    },
     {
       "path": "redirects.json",
       "sha256": "98d70ca09608807004d01104add9a34a2e37442ad5bc3771703b2da810edeb17",
       "size": 2112
     },
     {
+      "path": "reference/enzymes.json",
+      "sha256": "704a4dedcf60ee828b3ebef36cb5c2945ff035a9e0a232da46a104f6333ab6bd",
+      "size": 1986
+    },
+    {
+      "path": "reference/fertman.json",
+      "sha256": "d24e60d6b84be1f26e17c1d8ee97ee7ba94a813670283b1b26efdd18139ffc11",
+      "size": 3596
+    },
+    {
+      "path": "reference/fruit-sugar.json",
+      "sha256": "c74815f8bd075592ee1bb4edcaf4fb267e2ba47d451647b7a93eb504c7766282",
+      "size": 3310
+    },
+    {
+      "path": "reference/hops.json",
+      "sha256": "e0a1a8315d71811eebe60357f00f9dca0710ffbf0339467a2e229e7384e8eda8",
+      "size": 2873
+    },
+    {
+      "path": "reference/units.json",
+      "sha256": "dbc49b9711dc50a913298264d85e222de7555e79739a21e45ac5f1c8b9e79b77",
+      "size": 2460
+    },
+    {
+      "path": "reference/yeast.json",
+      "sha256": "2874ebaf8912b49814554a6550c1ba417db269a7bd03f2d012006be510a9a1f0",
+      "size": 2690
+    },
+    {
       "path": "search/index.json",
-      "sha256": "eb13b4af22c75027499bce010f07658d1a76c16def28087407cb6a80c94e4b3d",
-      "size": 126840
+      "sha256": "2227c91e57fd7790a302bbbae47451e9fc32990d882af274be954397eb587f44",
+      "size": 129143
     },
     {
       "path": "wiki/equipment/airlock.md",
@@ -33,8 +98,8 @@
     },
     {
       "path": "wiki/equipment/measurements.md",
-      "sha256": "9ec17e78f1550df70eadc09e48e77ec944d61d7be0938714357608dc7d99a711",
-      "size": 7667
+      "sha256": "8fb349fdf5e6806fa43d82fd2988c8ee87d2eeaf0f1c7760255afe211b1e16e2",
+      "size": 7990
     },
     {
       "path": "wiki/equipment/parrot.md",
@@ -73,18 +138,18 @@
     },
     {
       "path": "wiki/processes/beer/simple-brew.md",
-      "sha256": "aba6242207f64dc7c444d2d2db0b5943f8e2b72ba86bcaa05bd3f566e8dbd8f5",
-      "size": 711
+      "sha256": "b4b1e5efd323767f5f6a6ec7e4ee4b2133ec676722e20b3028dfd805ca05731a",
+      "size": 981
     },
     {
       "path": "wiki/processes/ferment/primary.md",
-      "sha256": "a70387faa6fe68f5fbe969a5cc3e4aa2ccdcb4ec6f432da7de2a742a228e9c19",
-      "size": 717
+      "sha256": "973696362e77c386b57dab8d2f8cd0c910e918c746996b5941b3c34335cd90b4",
+      "size": 950
     },
     {
       "path": "wiki/processes/finish/dilution.md",
-      "sha256": "227c5d38c2e798d1abbcbe7f6c2e4cfdc9c1850b4ec4f803b22faa3262b8698f",
-      "size": 841
+      "sha256": "ca16b2e98ccc36bdd7308e2974d71458dd7af72c17a0061bc868b742cfb01e87",
+      "size": 1057
     },
     {
       "path": "wiki/processes/finish/fining.md",
@@ -93,8 +158,8 @@
     },
     {
       "path": "wiki/processes/prepare/grape.md",
-      "sha256": "cd4d602813cf10e09a42d70061e6674d3e80b1f79ebecf2da4fc57bb7c936067",
-      "size": 872
+      "sha256": "44c15b868126a042356bba0cbe917ad4647fe66a3fab88e665097a360ad1399a",
+      "size": 1109
     },
     {
       "path": "wiki/processes/separate/first-run.md",
@@ -108,8 +173,8 @@
     },
     {
       "path": "wiki/processes/separate/heads-hearts-tails.md",
-      "sha256": "4adcd12a3b7d87e1dadde83830f1f7be339d802db343423500b454b92798474a",
-      "size": 4879
+      "sha256": "4d682b5098ac37566de9529e4d04395bcd897ece284f72f0793be907154fba45",
+      "size": 5092
     },
     {
       "path": "wiki/processes/separate/racking.md",
@@ -128,23 +193,23 @@
     },
     {
       "path": "wiki/raw/distiller-yeast.md",
-      "sha256": "bd3f2498fa1e4b7b6a84407afef10c40025be37f6a795f1d48c02bb64ed022de",
-      "size": 6815
+      "sha256": "419f7fef22528c1d7aeb0cf1b2b217b8c5c0f1d3bafc793dc80a07f787185af8",
+      "size": 7039
     },
     {
       "path": "wiki/raw/sugar-glucose.md",
-      "sha256": "f9703b6a37ca58b61e4eed1ad38cf96364c565808d4b7a11d9a19398f95e4a83",
-      "size": 587
+      "sha256": "3ca3984b2140bfd5bdc185e639b571507c92865bfc6211bab98ed79dd46dea1c",
+      "size": 868
     },
     {
       "path": "wiki/raw/yeast.md",
-      "sha256": "eec39b31c6175a6931ca45cbf1d73ffed04637f15c3e7439c397687b934214b3",
-      "size": 794
+      "sha256": "d91b9746df5bd336329a2dd795eccad89b9b8f1cae2150df0498e7fddfc8020e",
+      "size": 1023
     },
     {
       "path": "wiki/recipes/apple-wine-sweet.md",
-      "sha256": "77826b45b63cf492ecc16b6366f5423e64c4c48d2a37541427b41c9651fdf840",
-      "size": 11947
+      "sha256": "387e235aa1bc6385ad9f0a93aaaf910920db0e6ec9d192d00fce7f3905aa07b5",
+      "size": 12188
     },
     {
       "path": "wiki/recipes/cider-25.md",
@@ -173,11 +238,11 @@
     },
     {
       "path": "wiki/reference/hydrometer-temp.md",
-      "sha256": "4b1d199da3fbb06fbd6ec551c3053eb68d235271fd911396895dc155215d20e5",
-      "size": 2826
+      "sha256": "54e83a53d16338d4a048d3d63a49c67ad53fb98bb98dab180cfba6a3bc546aa2",
+      "size": 3049
     }
   ],
   "searchIndex": "search/index.json",
-  "searchIndexSha256": "eb13b4af22c75027499bce010f07658d1a76c16def28087407cb6a80c94e4b3d",
+  "searchIndexSha256": "2227c91e57fd7790a302bbbae47451e9fc32990d882af274be954397eb587f44",
   "redirects": "redirects.json"
 }

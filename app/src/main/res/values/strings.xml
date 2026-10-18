@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Дистиллярий</string>
+    <string name="nav_back">Назад</string>
 
     <string name="updates_title">Обновления</string>
     <string name="installed_content">Установленный контент</string>
@@ -41,6 +42,45 @@
     <string name="knowledge_tree_expand">Раскрыть раздел %1$s</string>
     <string name="knowledge_tree_collapse">Свернуть раздел %1$s</string>
     <string name="knowledge_article_count">%1$d</string>
+    <string name="knowledge_mode_articles">Статьи</string>
+    <string name="knowledge_mode_tables">Таблицы</string>
+    <string name="knowledge_tables_empty_title">Справочников пока нет</string>
+    <string name="knowledge_tables_empty_text">Проверьте обновления контента. Таблицы приходят вместе со статьями.</string>
+    <string name="knowledge_search_articles">Статьи</string>
+    <string name="knowledge_search_tables">Таблицы</string>
+    <string name="knowledge_table_rows">%1$d строк</string>
+    <string name="knowledge_open_table">Открыть таблицу %1$s</string>
+
+    <string name="reference_title">Справочник</string>
+    <string name="reference_back">Назад</string>
+    <string name="reference_search_placeholder">Найти в таблице</string>
+    <string name="reference_search_clear">Очистить поиск по таблице</string>
+    <string name="reference_rows_count">Строк: %1$d из %2$d</string>
+    <string name="reference_empty_title">Ничего не нашлось</string>
+    <string name="reference_empty_text">Попробуйте другое слово или очистите поиск.</string>
+    <string name="reference_sort_hint">Нажмите на заголовок колонки, чтобы отсортировать.</string>
+    <string name="reference_related_articles">Статьи по теме</string>
+    <string name="reference_open_calculator">Открыть в калькуляторе</string>
+    <string name="reference_source">Источник: %1$s</string>
+    <string name="reference_updated">Обновлено %1$s</string>
+    <string name="reference_not_found">Таблица не найдена</string>
+    <string name="reference_not_found_text">Ссылка ведёт на справочник, которого нет в установленном пакете. Проверьте обновления.</string>
+
+    <string name="calc_title">Расчёты</string>
+    <string name="calc_back">Назад</string>
+    <string name="calc_result">Результат</string>
+    <string name="calc_error">Проверьте данные</string>
+    <string name="calc_reset">Сбросить</string>
+    <string name="calc_source">Формула: %1$s</string>
+    <string name="calc_open">Открыть калькулятор %1$s</string>
+    <string name="calc_count">Калькуляторов: %1$d</string>
+    <string name="calc_heading">Калькуляторы</string>
+    <string name="calc_inputs">Данные</string>
+    <string name="calc_details">Как считается</string>
+    <string name="calc_result_hint">Результат обновляется сразу</string>
+    <string name="calc_more_results">Ещё показатели</string>
+    <string name="calc_not_found">Калькулятор не найден</string>
+    <string name="calc_not_found_text">Возможно, ссылка устарела. Вернитесь к списку расчётов и выберите нужный.</string>
 
     <string name="article_back">Назад</string>
     <string name="article_title">Статья</string>
@@ -62,6 +102,146 @@
     <string name="article_text_larger">Увеличить текст</string>
     <string name="article_text_size_value">%1$d %%</string>
 
+    <string name="nav_now">Сейчас</string>
+    <string name="nav_batches">Партии</string>
     <string name="nav_knowledge">Знания</string>
+    <string name="nav_calculators">Расчёты</string>
     <string name="nav_updates">Обновления</string>
+
+    <string name="now_title">Сейчас</string>
+    <string name="now_subtitle">Активных: %1$d · просрочено: %2$d</string>
+    <string name="now_loading">Открываем партии…</string>
+    <string name="now_tasks_title">Пора сделать</string>
+    <string name="now_no_tasks_title">На сегодня задач нет</string>
+    <string name="now_no_tasks_text">Можно заглянуть в активные партии или поставить новую.</string>
+    <string name="now_active_title">Активные партии</string>
+    <string name="now_empty_title">Пока нет ни одной партии</string>
+    <string name="now_empty_text">Выберите рецепт из знаний или создайте партию с нуля — шаги и напоминания появятся сами.</string>
+    <string name="now_new_batch">Новая партия</string>
+    <string name="now_open_batch">Открыть партию</string>
+    <string name="now_mark_done">Выполнить</string>
+    <string name="now_notifications_title">Включите напоминания</string>
+    <string name="now_notifications_text">Приложение подскажет, когда подходит срок шага. Без сервера и интернета.</string>
+    <string name="now_notifications_enable">Разрешить уведомления</string>
+    <string name="now_retry">Попробовать снова</string>
+
+    <string name="batches_title">Партии</string>
+    <string name="batches_new">Новая партия</string>
+    <string name="batches_count">Всего: %1$d</string>
+    <string name="batches_filter_all">Все</string>
+    <string name="batches_filter_active">Активные</string>
+    <string name="batches_filter_completed">Готовые</string>
+    <string name="batches_filter_archived">Архив</string>
+    <string name="batches_empty_title">Здесь появятся ваши партии</string>
+    <string name="batches_empty_text">Партии хранятся только на телефоне. Обновление контента их не меняет.</string>
+    <string name="batches_filter_empty">В этом списке пусто</string>
+
+    <string name="batch_kind_distillate">Дистиллят</string>
+    <string name="batch_kind_wine">Вино</string>
+    <string name="batch_kind_beer">Пиво</string>
+    <string name="batch_kind_other">Другое</string>
+    <string name="batch_status_active">В работе</string>
+    <string name="batch_status_completed">Готова</string>
+    <string name="batch_status_archived">Архив</string>
+    <string name="batch_volume">%1$s л</string>
+    <string name="batch_started">С %1$s</string>
+    <string name="batch_days">День %1$d</string>
+    <string name="batch_progress">%1$d / %2$d шагов</string>
+    <string name="batch_progress_percent">%1$d%%</string>
+    <string name="batch_no_steps">Шагов пока нет</string>
+    <string name="batch_next_step">Следующий шаг: %1$s</string>
+    <string name="batch_no_next_step">Все шаги выполнены</string>
+    <string name="batch_open">Открыть</string>
+    <string name="batch_overdue">Просрочено</string>
+    <string name="batch_due_today">Сегодня</string>
+    <string name="batch_due_tomorrow">Завтра</string>
+    <string name="batch_due_on">До %1$s</string>
+    <string name="batch_due_overdue_days">Просрочено на %1$d дн.</string>
+
+
+    <string name="new_batch_title">Новая партия</string>
+    <string name="new_batch_intro">Шаблон задаёт состав и шаги. Дальше партия живёт своей жизнью: изменения рецепта её не затронут.</string>
+    <string name="new_batch_params">Параметры</string>
+    <string name="new_batch_name">Название</string>
+    <string name="new_batch_name_hint">Например, «Сахарная брага № 3»</string>
+    <string name="new_batch_volume">Объём, л</string>
+    <string name="new_batch_type">Тип</string>
+    <string name="new_batch_template">Шаблон</string>
+    <string name="new_batch_blank">С нуля</string>
+    <string name="new_batch_blank_short">Свободная партия без готовых шагов</string>
+    <string name="new_batch_expected">Ожидается около %1$s л, %2$s %%</string>
+    <string name="new_batch_expected_volume">Ожидается около %1$s л</string>
+    <string name="new_batch_steps_count">Шагов: %1$d</string>
+    <string name="new_batch_ingredients_count">Ингредиентов: %1$d</string>
+    <string name="new_batch_create">Создать партию</string>
+    <string name="new_batch_creating">Создаём…</string>
+    <string name="new_batch_validation">Введите название и объём больше нуля.</string>
+    <string name="new_batch_recipes_error">Не удалось прочитать шаблоны рецептов.</string>
+    <string name="new_batch_recipes_retry">Обновить шаблоны</string>
+    <string name="new_batch_no_recipes">В установленном контенте нет шаблонов. Можно создать партию с нуля.</string>
+
+
+    <string name="batch_detail_loading">Открываем партию…</string>
+    <string name="batch_detail_missing">Партия не найдена</string>
+    <string name="batch_detail_missing_text">Возможно, она была удалена. Вернитесь к списку партий.</string>
+    <string name="batch_detail_current">Сейчас: %1$s</string>
+    <string name="batch_detail_steps">Шаги</string>
+    <string name="batch_detail_add_step">Добавить шаг</string>
+    <string name="batch_detail_step_wiki">Статья</string>
+    <string name="batch_detail_steps_empty">Шагов пока нет. Добавьте первый — и приложение напомнит о сроке.</string>
+    <string name="batch_detail_measurements">Замеры</string>
+    <string name="batch_detail_add_measurement">Добавить замер</string>
+    <string name="batch_detail_measurements_empty">Первый замер — начальная плотность. По двум замерам появится расчётная крепость и график.</string>
+    <string name="batch_detail_chart">Плотность по дням</string>
+    <string name="batch_detail_chart_start">Старт: %1$s</string>
+    <string name="batch_detail_chart_finish">Финиш: %1$s</string>
+    <string name="batch_detail_journal">Журнал</string>
+    <string name="batch_detail_add_journal">Добавить запись</string>
+    <string name="batch_detail_journal_empty">Записывайте добавки, переливки, дегустации и просто наблюдения — история останется в партии.</string>
+    <string name="batch_detail_repeat">Повторить партию</string>
+    <string name="batch_detail_complete">Завершить партию</string>
+    <string name="batch_detail_archive">В архив</string>
+    <string name="batch_detail_return_active">Вернуть в работу</string>
+    <string name="batch_detail_notes">Заметки</string>
+    <string name="batch_detail_notes_hint">Что важно помнить об этой партии</string>
+    <string name="batch_detail_save_notes">Сохранить заметки</string>
+    <string name="batch_detail_more">Действия с партией</string>
+    <string name="batch_detail_none">Нет</string>
+
+    <string name="batch_step_done">Выполнено</string>
+    <string name="batch_step_pending">Ожидает</string>
+    <string name="batch_gravity">Плотность %1$s</string>
+    <string name="batch_temp">%1$s °C</string>
+    <string name="batch_abv">%1$s %%</string>
+    <string name="batch_abv_no_data">Крепость появится после второго замера</string>
+
+    <string name="dialog_cancel">Отмена</string>
+    <string name="dialog_add">Добавить</string>
+    <string name="dialog_save">Сохранить</string>
+    <string name="dialog_add_step_title">Новый шаг</string>
+    <string name="dialog_step_name">Название шага</string>
+    <string name="dialog_step_after_days">Через сколько дней</string>
+    <string name="dialog_step_after_days_hint">Например, 3</string>
+    <string name="dialog_step_invalid">Введите название и число дней от 0 до 365.</string>
+    <string name="dialog_measurement_title">Новый замер</string>
+    <string name="dialog_measurement_gravity">Плотность</string>
+    <string name="dialog_measurement_gravity_hint">Например, 1,050</string>
+    <string name="dialog_measurement_temp">Температура, °C</string>
+    <string name="dialog_measurement_temp_hint">Необязательно</string>
+    <string name="dialog_measurement_note">Комментарий</string>
+    <string name="dialog_measurement_invalid">Плотность должна быть от 0,800 до 1,300, температура — от −10 до 60 °C.</string>
+    <string name="dialog_journal_title">Новая запись</string>
+    <string name="dialog_journal_kind">Тип записи</string>
+    <string name="dialog_journal_text">Что произошло</string>
+    <string name="dialog_journal_invalid">Введите текст записи.</string>
+    <string name="journal_kind_note">Заметка</string>
+    <string name="journal_kind_addition">Добавка</string>
+    <string name="journal_kind_racking">Переливка</string>
+    <string name="journal_kind_tasting">Дегустация</string>
+
+    <string name="reminder_channel_name">Напоминания о партиях</string>
+    <string name="reminder_channel_description">Сроки шагов и подсказки по партиям</string>
+    <string name="reminder_title">Партия «%1$s»</string>
+    <string name="reminder_text">%1$s · срок %2$s</string>
+
 </resources>

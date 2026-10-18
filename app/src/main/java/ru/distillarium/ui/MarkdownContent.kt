@@ -1,9 +1,11 @@
 package ru.distillarium.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -105,22 +107,24 @@ private fun HeadingBlock(
 ) {
     val size = when (node.level) {
         1 -> 26f
-        2 -> 22f
-        3 -> 19f
-        4 -> 17.5f
-        else -> 17f
+        2 -> 21f
+        3 -> 18f
+        4 -> 16.5f
+        else -> 16f
     }.sp * textScale
     Text(
         text = inlineText(node, onWikiLink),
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 20.dp, bottom = 6.dp)
+            .padding(top = 24.dp, bottom = 8.dp)
             .semantics { heading() },
         style = MaterialTheme.typography.headlineSmall.copy(
             fontSize = size,
-            lineHeight = size * 1.3f,
+            lineHeight = size * 1.28f,
             fontWeight = FontWeight.SemiBold,
+            letterSpacing = (-0.15).sp,
         ),
+        color = MaterialTheme.colorScheme.onSurface,
     )
 }
 
@@ -132,16 +136,17 @@ private fun ParagraphBlock(
     modifier: Modifier = Modifier,
 ) {
     val style = MaterialTheme.typography.bodyLarge.copy(
-        fontSize = 17.sp * textScale,
-        lineHeight = 26.sp * textScale,
+        fontSize = 16.sp * textScale,
+        lineHeight = 25.sp * textScale,
     )
     SelectionContainer {
         Text(
             text = inlineText(node, onWikiLink),
             modifier = modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
+                .padding(vertical = 5.dp),
             style = style,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -159,8 +164,8 @@ private fun MarkdownList(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 4.dp, top = 2.dp, bottom = 2.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+            .padding(start = 2.dp, top = 4.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         var index = start
         var child = node.firstChild
@@ -169,15 +174,20 @@ private fun MarkdownList(
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = if (ordered) "$index." else "•",
-                        modifier = Modifier.width(28.dp),
+                        modifier = Modifier.width(22.dp),
                         textAlign = TextAlign.End,
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 17.sp * textScale,
-                            lineHeight = 26.sp * textScale,
+                            fontSize = 16.sp * textScale,
+                            lineHeight = 25.sp * textScale,
                         ),
-                        fontWeight = if (ordered) FontWeight.Medium else FontWeight.Normal,
+                        fontWeight = FontWeight.Medium,
+                        color = if (ordered) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(9.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         var itemChild = child.firstChild
                         while (itemChild != null) {
@@ -188,9 +198,10 @@ private fun MarkdownList(
                                         .fillMaxWidth()
                                         .padding(vertical = 2.dp),
                                     style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontSize = 17.sp * textScale,
-                                        lineHeight = 26.sp * textScale,
+                                        fontSize = 16.sp * textScale,
+                                        lineHeight = 25.sp * textScale,
                                     ),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
                             } else {
                                 MarkdownBlock(itemChild, textScale, onWikiLink)
@@ -217,10 +228,14 @@ private fun QuoteBlock(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+        ),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
             var child = node.firstChild
             while (child != null) {
                 MarkdownBlock(child, textScale, onWikiLink)
@@ -236,17 +251,18 @@ private fun CodeBlock(code: String, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Text(
             text = code.trimEnd(),
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
-                .padding(12.dp),
+                .padding(14.dp),
             fontFamily = FontFamily.Monospace,
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             lineHeight = 20.sp,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -260,43 +276,74 @@ private fun MarkdownTable(
     modifier: Modifier = Modifier,
 ) {
     val rows = remember(table) { tableRows(table) }
-    Column(
+    val columns = rows.maxOfOrNull { it.cells.size }?.coerceAtLeast(1) ?: 1
+    val horizontal = rememberScrollState()
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .horizontalScroll(rememberScrollState()),
+            .padding(vertical = 10.dp),
     ) {
-        rows.forEach { row ->
-            Row {
-                row.cells.forEachIndexed { index, cell ->
-                    Box(
-                        modifier = Modifier
-                            .width(if (index == 0) 160.dp else 190.dp)
-                            .background(
-                                if (row.header) {
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                } else {
-                                    Color.Transparent
-                                },
-                            )
-                            .padding(10.dp),
-                    ) {
-                        Text(
-                            text = inlineText(cell, onWikiLink),
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 15.sp * textScale,
-                                lineHeight = 22.sp * textScale,
-                                fontWeight = if (row.header) {
-                                    FontWeight.SemiBold
-                                } else {
-                                    FontWeight.Normal
-                                },
-                            ),
+        val evenWidth = maxWidth / columns.toFloat()
+        val cellWidth = if (evenWidth >= 104.dp) evenWidth else 112.dp
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+            ),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(horizontal),
+            ) {
+                rows.forEachIndexed { rowIndex, row ->
+                    Row(modifier = Modifier.width(cellWidth * columns.toFloat())) {
+                        repeat(columns) { columnIndex ->
+                            val cell = row.cells.getOrNull(columnIndex)
+                            Box(
+                                modifier = Modifier
+                                    .width(cellWidth)
+                                    .background(
+                                        if (row.header) {
+                                            MaterialTheme.colorScheme.surfaceContainerHigh
+                                        } else {
+                                            Color.Transparent
+                                        },
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 11.dp),
+                            ) {
+                                if (cell != null) {
+                                    Text(
+                                        text = inlineText(cell, onWikiLink),
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 14.sp * textScale,
+                                            lineHeight = 21.sp * textScale,
+                                            fontWeight = if (row.header) {
+                                                FontWeight.SemiBold
+                                            } else {
+                                                FontWeight.Normal
+                                            },
+                                        ),
+                                        color = if (row.header) {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    if (rowIndex < rows.lastIndex) {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
                         )
                     }
                 }
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         }
     }
 }

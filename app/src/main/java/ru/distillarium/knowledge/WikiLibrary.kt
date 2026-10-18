@@ -34,10 +34,12 @@ class WikiLibrary(
     val redirects: Map<String, String>,
     val roots: List<WikiNode>,
     val tags: List<WikiTag>,
+    val referenceTables: List<ReferenceTable> = emptyList(),
     val contentVersion: String? = null,
     val released: String? = null,
 ) {
     private val byId = articles.associateBy { it.id }
+    private val referenceById = referenceTables.associateBy { it.id }
     private val tagKeysByArticle: Map<String, Set<String>> by lazy {
         articles.associate { article ->
             article.id to WikiTags.tagsFor(article).map { WikiTags.key(it) }.toSet()
@@ -63,6 +65,45 @@ class WikiLibrary(
             ?: redirects[oldAddress]
             ?: redirects[clean]
         return redirected?.trim('/')?.let(byId::get)
+    }
+
+    fun referenceTable(id: String): ReferenceTable? =
+        referenceById[WikiLinks.referenceTarget(id)]
+
+    /** Резолвит `ref:id`, `[[ref:id|…]]` и просто id таблицы. */
+    fun resolveReference(target: String): ReferenceTable? =
+        referenceTable(target)
+
+    /** Таблицы, на которые ссылается статья. */
+    fun tablesForArticle(articleId: String): List<ReferenceTable> {
+        val article = byId[articleId] ?: return emptyList()
+        return WikiLinks.targets(article.body)
+            .mapNotNull(::resolveReference)
+            .distinctBy { it.id }
+    }
+
+    /** Статьи, которые ссылаются на таблицу через `[[ref:id]]`. */
+    fun articlesReferencingTable(tableId: String): List<Article> {
+        val id = WikiLinks.referenceTarget(tableId)
+        return articles.asSequence()
+            .filter { article ->
+                WikiLinks.targets(article.body).any { WikiLinks.referenceTarget(it) == id }
+            }
+            .sortedBy { it.title.lowercase(Locale.ROOT) }
+            .toList()
+    }
+
+    /** Поиск по названиям, описаниям и содержимому справочников. */
+    fun searchTables(query: String): List<ReferenceTable> {
+        if (SearchText.tokens(query).isEmpty()) return emptyList()
+        return referenceTables
+            .filter { it.matches(query) }
+            .sortedWith(
+                compareByDescending<ReferenceTable> { table ->
+                    if (table.title.contains(query.trim(), ignoreCase = true)) 1 else 0
+                }.thenBy { it.title.lowercase(Locale.ROOT) },
+            )
+            .take(20)
     }
 
     fun backlinks(id: String): List<Article> = articles
@@ -114,6 +155,15 @@ class WikiLibrary(
 object WikiLinks {
     private val WIKI_LINK = Regex("""\[\[([^\]|]+)(?:\|([^\]]*))?]]""")
     private val MARKDOWN_LINK = Regex("""(?<!!)\[[^\]]*]\(([^)]+)\)""")
+
+    /** Приводит `ref:id`, `[[ref:id]]` и `id.json` к id справочника. */
+    fun referenceTarget(target: String): String = target
+        .trim()
+        .removePrefix("[[")
+        .removeSuffix("]]")
+        .removePrefix("ref:")
+        .removeSuffix(".json")
+        .trim('/')
 
     fun targets(markdown: String): List<String> =
         WIKI_LINK.findAll(markdown).map { it.groupValues[1].trim() }.toList()

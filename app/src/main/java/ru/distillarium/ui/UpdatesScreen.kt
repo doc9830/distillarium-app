@@ -44,7 +44,7 @@ fun UpdatesScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.updates_title)) })
+            DistillariumTopBar(title = stringResource(R.string.updates_title))
         },
     ) { padding ->
         if (state.loading) {
@@ -70,8 +70,8 @@ fun UpdatesScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             InstalledCard(state)
             PreviousCard(state)
@@ -121,37 +121,64 @@ fun UpdatesScreen(
 
 @Composable
 private fun InstalledCard(state: UpdatesUiState) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    androidx.compose.material3.Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+        ),
+    ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
-                text = stringResource(R.string.installed_content),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                text = stringResource(R.string.installed_content).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
             )
             state.installedVersion?.let {
                 Text(
                     text = stringResource(R.string.version_label, it),
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
                 )
             }
             state.schemaVersion?.let {
-                Text(stringResource(R.string.schema_label, it))
+                Text(
+                    text = stringResource(R.string.schema_label, it),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             state.released?.let {
-                Text(stringResource(R.string.released_label, it))
+                Text(
+                    text = stringResource(R.string.released_label, it),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             state.installedAt?.let {
-                Text(stringResource(R.string.installed_at_label, it))
+                Text(
+                    text = stringResource(R.string.installed_at_label, it),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             state.source?.let {
-                Text(stringResource(R.string.source_label, it))
+                Text(
+                    text = stringResource(R.string.source_label, it),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             state.articles?.let {
-                Text(stringResource(R.string.articles_label, it))
+                Text(
+                    text = stringResource(R.string.articles_label, it),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             Text(
                 text = stringResource(
@@ -167,18 +194,28 @@ private fun InstalledCard(state: UpdatesUiState) {
 
 @Composable
 private fun PreviousCard(state: UpdatesUiState) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    androidx.compose.material3.Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+        ),
+    ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
-                text = stringResource(R.string.previous_version),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                text = stringResource(R.string.previous_version).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = state.previousVersion ?: stringResource(R.string.previous_none),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

@@ -10,15 +10,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.distillarium.DistillariumApp
+import ru.distillarium.knowledge.ReferenceTable
 import ru.distillarium.knowledge.SearchResult
 import ru.distillarium.knowledge.WikiLibrary
 import ru.distillarium.knowledge.WikiNode
+
+enum class KnowledgeMode {
+    Articles,
+    Tables,
+}
 
 data class KnowledgeUiState(
     val loading: Boolean = true,
     val library: WikiLibrary? = null,
     val roots: List<WikiNode> = emptyList(),
     val results: List<SearchResult> = emptyList(),
+    val tableResults: List<ReferenceTable> = emptyList(),
+    val mode: KnowledgeMode = KnowledgeMode.Articles,
     val query: String = "",
     val selectedTag: String? = null,
     val expanded: Set<String> = emptySet(),
@@ -72,6 +80,11 @@ class KnowledgeViewModel(application: Application) : AndroidViewModel(applicatio
                         } else {
                             library.search(current.query, tag)
                         },
+                        tableResults = if (current.query.isBlank()) {
+                            emptyList()
+                        } else {
+                            library.searchTables(current.query)
+                        },
                         error = null,
                     )
                 }
@@ -98,11 +111,20 @@ class KnowledgeViewModel(application: Application) : AndroidViewModel(applicatio
                 } else {
                     library.search(query, current.selectedTag)
                 },
+                tableResults = if (query.isBlank() || library == null) {
+                    emptyList()
+                } else {
+                    library.searchTables(query)
+                },
             )
         }
     }
 
     fun clearQuery() = onQueryChange("")
+
+    fun selectMode(mode: KnowledgeMode) {
+        _state.update { it.copy(mode = mode) }
+    }
 
     fun selectTag(key: String?) {
         _state.update { current ->

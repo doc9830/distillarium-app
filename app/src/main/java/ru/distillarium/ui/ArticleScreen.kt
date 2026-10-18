@@ -21,9 +21,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -71,6 +71,7 @@ import ru.distillarium.knowledge.ArticleTab
 import ru.distillarium.knowledge.MarkdownParser
 import ru.distillarium.knowledge.WikiLabels
 import ru.distillarium.knowledge.WikiLibrary
+import ru.distillarium.knowledge.WikiLinks
 
 private sealed interface ArticleItem {
     data class Breadcrumb(val text: String) : ArticleItem
@@ -100,6 +101,8 @@ fun ArticleScreen(
     initialHeading: String? = null,
     onBack: () -> Unit,
     onOpenArticle: (String) -> Unit,
+    onOpenReference: (String) -> Unit,
+    onOpenCalculator: (String) -> Unit,
     onEquipmentSelected: (String) -> Unit,
     onFontScaleChange: (Float) -> Unit,
 ) {
@@ -110,7 +113,11 @@ fun ArticleScreen(
     val shareChooser = stringResource(R.string.article_share_chooser)
     val backlinks = remember(article.id) { library.backlinks(article.id) }
     val openResolved: (String) -> Unit = { target ->
-        library.resolve(target)?.id?.let(onOpenArticle)
+        when {
+            target.startsWith("ref:") -> onOpenReference(WikiLinks.referenceTarget(target))
+            target.startsWith("calc:") -> onOpenCalculator(target.removePrefix("calc:").trim())
+            else -> library.resolve(target)?.id?.let(onOpenArticle)
+        }
     }
     val items = remember(article.id, backlinks) {
         buildArticleItems(article, library, backlinks)
@@ -140,23 +147,22 @@ fun ArticleScreen(
             listState.firstVisibleItemIndex > 1 || listState.firstVisibleItemScrollOffset > 640
         }
     }
+    val showTopTitle by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 1 || listState.firstVisibleItemScrollOffset > 180
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.article_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.article_back),
-                        )
-                    }
-                },
+            DistillariumTopBar(
+                title = if (showTopTitle) article.title else "",
+                onBack = onBack,
+                backLabel = stringResource(R.string.article_back),
                 actions = {
                     IconButton(onClick = { showToc = true }) {
                         Icon(
-                            Icons.Filled.List,
+                            Icons.AutoMirrored.Filled.List,
                             contentDescription = stringResource(R.string.article_toc),
                         )
                     }
@@ -286,9 +292,9 @@ private fun buildArticleItems(
 private fun Breadcrumb(text: String) {
     Text(
         text = text,
-        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+        modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
         style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.primary,
     )
 }
 
@@ -299,8 +305,8 @@ private fun ArticleTitle(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 10.dp),
-        style = MaterialTheme.typography.headlineMedium,
-        fontWeight = FontWeight.Bold,
+        style = MaterialTheme.typography.headlineLarge,
+        color = MaterialTheme.colorScheme.onSurface,
     )
 }
 
@@ -312,23 +318,22 @@ private fun ArticleMeta(article: Article) {
             .count { it.isNotBlank() }
         (words / 180).coerceAtLeast(1)
     }
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             WikiLabels.category(article.category)?.let { category ->
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                ) {
-                    Text(
-                        text = category,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                }
+                Text(
+                    text = category,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "·",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.outline,
+                )
             }
             Text(
                 text = stringResource(R.string.article_reading_time, readingMinutes),
@@ -345,30 +350,29 @@ private fun ArticleMeta(article: Article) {
         }
     }
     HorizontalDivider(
-        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-        color = MaterialTheme.colorScheme.outlineVariant,
+        modifier = Modifier.padding(top = 14.dp, bottom = 4.dp),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
     )
 }
 
 @Composable
 private fun ShortAnswer(text: String) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        ),
+            .padding(vertical = 10.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             Text(
-                text = stringResource(R.string.article_short),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
+                text = stringResource(R.string.article_short).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
             )
             Text(text = text, style = MaterialTheme.typography.bodyLarge)
         }
@@ -486,7 +490,6 @@ private fun EquipmentTabs(
                     selected = tab.title == active.title,
                     onClick = { onSelected(tab.title) },
                     label = { Text(tab.title) },
-                    modifier = Modifier.heightIn(min = 48.dp),
                 )
             }
         }
@@ -520,21 +523,25 @@ private fun Backlinks(
             style = MaterialTheme.typography.titleLarge,
         )
         articles.forEach { article ->
-            Card(
+            Surface(
                 onClick = { onOpenArticle(article.id) },
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
                 ),
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
                     Text(
                         text = article.title,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
                         text = library.breadcrumb(article.id),
@@ -577,16 +584,10 @@ fun ArticleLoadingScreen(onBack: () -> Unit) {
     BackHandler(onBack = onBack)
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.article_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.article_back),
-                        )
-                    }
-                },
+            DistillariumTopBar(
+                title = stringResource(R.string.article_title),
+                onBack = onBack,
+                backLabel = stringResource(R.string.article_back),
             )
         },
     ) { padding ->
@@ -601,7 +602,11 @@ fun ArticleLoadingScreen(onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 CircularProgressIndicator()
-                Text(stringResource(R.string.article_loading))
+                Text(
+                    text = stringResource(R.string.article_loading),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
@@ -613,16 +618,10 @@ fun MissingArticleScreen(onBack: () -> Unit) {
     BackHandler(onBack = onBack)
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.article_not_found)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.article_back),
-                        )
-                    }
-                },
+            DistillariumTopBar(
+                title = stringResource(R.string.article_not_found),
+                onBack = onBack,
+                backLabel = stringResource(R.string.article_back),
             )
         },
     ) { padding ->
@@ -630,8 +629,8 @@ fun MissingArticleScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 32.dp, vertical = 48.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(

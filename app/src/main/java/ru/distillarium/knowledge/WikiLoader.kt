@@ -29,12 +29,14 @@ object WikiLoader {
             ManifestParser.parseFile(File(contentDir, "manifest.json"))
         }.getOrNull()
         val redirects = readRedirects(File(contentDir, "redirects.json"))
+        val referenceTables = ReferenceLoader.load(contentDir)
 
         return WikiLibrary(
             articles = articles,
             redirects = redirects,
             roots = WikiTree.build(articles),
             tags = WikiTree.tags(articles),
+            referenceTables = referenceTables,
             contentVersion = manifest?.contentVersion,
             released = manifest?.released,
         )

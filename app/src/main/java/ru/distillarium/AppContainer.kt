@@ -4,6 +4,7 @@ import android.content.Context
 import java.io.File
 import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
+import ru.distillarium.batches.BatchRepository
 import ru.distillarium.content.ContentRepository
 import ru.distillarium.content.HttpContentClient
 import ru.distillarium.core.content.ContentInstaller
@@ -49,4 +50,5 @@ class AppContainer(context: Context) {
     )
 
     val wikiRepository: WikiRepository = WikiRepository(contentRepository)
+    val batchRepository: BatchRepository = BatchRepository(appContext)
 }

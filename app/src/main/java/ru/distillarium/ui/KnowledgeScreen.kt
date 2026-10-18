@@ -22,18 +22,20 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,7 +54,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -63,6 +67,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 import ru.distillarium.R
+import ru.distillarium.knowledge.ReferenceTable
 import ru.distillarium.knowledge.SearchResult
 import ru.distillarium.knowledge.SearchText
 import ru.distillarium.knowledge.WikiLibrary
@@ -79,23 +84,17 @@ fun KnowledgeScreen(
     onSelectTag: (String?) -> Unit,
     onToggleExpanded: (String) -> Unit,
     onOpenArticle: (String) -> Unit,
+    onOpenReference: (String) -> Unit,
+    onSelectMode: (KnowledgeMode) -> Unit,
     onRetry: () -> Unit,
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(stringResource(R.string.knowledge_title))
-                        state.library?.contentVersion?.let { version ->
-                            Text(
-                                text = stringResource(R.string.knowledge_version, version),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
+            DistillariumTopBar(
+                title = stringResource(R.string.knowledge_title),
+                subtitle = state.library?.contentVersion?.let { version ->
+                    stringResource(R.string.knowledge_version, version)
                 },
             )
         },
@@ -110,12 +109,18 @@ fun KnowledgeScreen(
                 onQueryChange = onQueryChange,
                 onClear = onClearQuery,
             )
-            state.library?.let { library ->
-                TagRow(
-                    tags = library.tags,
-                    selected = state.selectedTag,
-                    onSelect = onSelectTag,
-                )
+            ModeRow(
+                selected = state.mode,
+                onSelect = onSelectMode,
+            )
+            if (state.mode == KnowledgeMode.Articles) {
+                state.library?.let { library ->
+                    TagRow(
+                        tags = library.tags,
+                        selected = state.selectedTag,
+                        onSelect = onSelectTag,
+                    )
+                }
             }
             when {
                 state.loading && state.library == null -> LoadingState()
@@ -129,6 +134,7 @@ fun KnowledgeScreen(
                     listState = listState,
                     onToggleExpanded = onToggleExpanded,
                     onOpenArticle = onOpenArticle,
+                    onOpenReference = onOpenReference,
                     onSelectTag = onSelectTag,
                     onClearQuery = onClearQuery,
                     onRetry = onRetry,
@@ -145,30 +151,76 @@ private fun SearchField(
     onQueryChange: (String) -> Unit,
     onClear: () -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
-    OutlinedTextField(
-        value = query,
-        onValueChange = onQueryChange,
+    SearchInput(
+        query = query,
+        onQueryChange = onQueryChange,
+        placeholder = stringResource(R.string.knowledge_search_placeholder),
+        onClear = onClear,
+        clearLabel = stringResource(R.string.knowledge_search_clear),
+    )
+}
+
+@Composable
+private fun ModeRow(
+    selected: KnowledgeMode,
+    onSelect: (KnowledgeMode) -> Unit,
+) {
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        placeholder = { Text(stringResource(R.string.knowledge_search_placeholder)) },
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = onClear) {
-                    Icon(
-                        Icons.Filled.Clear,
-                        contentDescription = stringResource(R.string.knowledge_search_clear),
-                    )
-                }
-            }
+            .padding(horizontal = 20.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Row(
+            modifier = Modifier.padding(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            ModeSegment(
+                text = stringResource(R.string.knowledge_mode_articles),
+                selected = selected == KnowledgeMode.Articles,
+                onClick = { onSelect(KnowledgeMode.Articles) },
+                modifier = Modifier.weight(1f),
+            )
+            ModeSegment(
+                text = stringResource(R.string.knowledge_mode_tables),
+                selected = selected == KnowledgeMode.Tables,
+                onClick = { onSelect(KnowledgeMode.Tables) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ModeSegment(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 38.dp),
+        shape = RoundedCornerShape(11.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.surfaceContainerLowest
+        } else {
+            Color.Transparent
         },
-        singleLine = true,
-        shape = RoundedCornerShape(28.dp),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-    )
+        contentColor = if (selected) {
+            MaterialTheme.colorScheme.onSurface
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+            )
+        }
+    }
 }
 
 @Composable
@@ -178,25 +230,59 @@ private fun TagRow(
     onSelect: (String?) -> Unit,
 ) {
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item(key = "all") {
-            FilterChip(
+            TagPill(
+                text = stringResource(R.string.knowledge_all_tags),
                 selected = selected == null,
                 onClick = { onSelect(null) },
-                label = { Text(stringResource(R.string.knowledge_all_tags)) },
-                modifier = Modifier.heightIn(min = 48.dp),
             )
         }
         items(tags, key = { it.key }) { tag ->
-            FilterChip(
+            TagPill(
+                text = "${tag.label} · ${tag.count}",
                 selected = selected == tag.key,
                 onClick = { onSelect(if (selected == tag.key) null else tag.key) },
-                label = { Text("${tag.label} · ${tag.count}") },
-                modifier = Modifier.heightIn(min = 48.dp),
             )
         }
+    }
+}
+
+@Composable
+private fun TagPill(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        },
+        contentColor = if (selected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        border = if (selected) {
+            null
+        } else {
+            androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+            )
+        },
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+            style = MaterialTheme.typography.labelMedium,
+        )
     }
 }
 
@@ -208,15 +294,16 @@ private fun KnowledgeContent(
     listState: LazyListState,
     onToggleExpanded: (String) -> Unit,
     onOpenArticle: (String) -> Unit,
+    onOpenReference: (String) -> Unit,
     onSelectTag: (String?) -> Unit,
     onClearQuery: () -> Unit,
     onRetry: () -> Unit,
 ) {
     var lastFilter by remember {
-        mutableStateOf(state.query to state.selectedTag)
+        mutableStateOf(Triple(state.query, state.selectedTag, state.mode))
     }
-    LaunchedEffect(state.query, state.selectedTag) {
-        val filter = state.query to state.selectedTag
+    LaunchedEffect(state.query, state.selectedTag, state.mode) {
+        val filter = Triple(state.query, state.selectedTag, state.mode)
         if (filter != lastFilter) {
             lastFilter = filter
             listState.scrollToItem(0)
@@ -235,15 +322,25 @@ private fun KnowledgeContent(
         }
 
         if (state.searching) {
+            val count = if (state.mode == KnowledgeMode.Articles) {
+                state.results.size
+            } else {
+                state.tableResults.size
+            }
             item(key = "results-count") {
                 Text(
-                    text = stringResource(R.string.knowledge_search_results, state.results.size),
+                    text = stringResource(R.string.knowledge_search_results, count),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
             }
-            if (state.results.isEmpty()) {
+            val empty = if (state.mode == KnowledgeMode.Articles) {
+                state.results.isEmpty()
+            } else {
+                state.tableResults.isEmpty()
+            }
+            if (empty) {
                 item(key = "results-empty") {
                     EmptyMessage(
                         title = stringResource(R.string.knowledge_search_empty_title),
@@ -252,13 +349,44 @@ private fun KnowledgeContent(
                         onAction = onClearQuery,
                     )
                 }
-            } else {
-                items(state.results, key = { it.article.id }) { result ->
+            } else if (state.mode == KnowledgeMode.Articles) {
+                items(state.results, key = { "a:${it.article.id}" }) { result ->
                     SearchResultCard(
                         result = result,
                         query = state.query,
                         onClick = { onOpenArticle(result.article.id) },
                     )
+                }
+            } else {
+                items(state.tableResults, key = { "t:${it.id}" }) { table ->
+                    ReferenceListCard(table = table, onClick = { onOpenReference(table.id) })
+                }
+            }
+            return@LazyColumn
+        }
+
+        if (state.mode == KnowledgeMode.Tables) {
+            val tables = library.referenceTables
+            if (tables.isEmpty()) {
+                item(key = "tables-empty") {
+                    EmptyMessage(
+                        title = stringResource(R.string.knowledge_tables_empty_title),
+                        text = stringResource(R.string.knowledge_tables_empty_text),
+                        action = stringResource(R.string.knowledge_retry),
+                        onAction = onRetry,
+                    )
+                }
+            } else {
+                item(key = "tables-count") {
+                    Text(
+                        text = stringResource(R.string.knowledge_table_rows, tables.size),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                    )
+                }
+                items(tables, key = { "t:${it.id}" }) { table ->
+                    ReferenceListCard(table = table, onClick = { onOpenReference(table.id) })
                 }
             }
             return@LazyColumn
@@ -330,16 +458,18 @@ private fun BranchRow(
     root: Boolean,
     onClick: () -> Unit,
 ) {
-    val background = if (root) {
-        MaterialTheme.colorScheme.surfaceVariant
-    } else {
-        Color.Transparent
-    }
-    Surface(color = background) {
+    Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = if (root) 56.dp else 48.dp)
+                .background(
+                    if (root) {
+                        MaterialTheme.colorScheme.surfaceContainerLow
+                    } else {
+                        Color.Transparent
+                    },
+                )
+                .heightIn(min = if (root) 54.dp else 46.dp)
                 .clickable(
                     onClickLabel = stringResource(
                         if (expanded) {
@@ -352,11 +482,11 @@ private fun BranchRow(
                     onClick = onClick,
                 )
                 .padding(
-                    start = if (root) 16.dp else 32.dp,
-                    end = 12.dp,
+                    start = if (root) 20.dp else 34.dp,
+                    end = 16.dp,
                 ),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
                 text = node.title,
@@ -366,17 +496,23 @@ private fun BranchRow(
                 } else {
                     MaterialTheme.typography.bodyLarge
                 },
-                fontWeight = if (root) FontWeight.SemiBold else FontWeight.Medium,
+                fontWeight = if (root) FontWeight.SemiBold else FontWeight.Normal,
             )
             CountBadge(node.count)
             Icon(
                 imageVector = if (expanded) {
                     Icons.Filled.KeyboardArrowDown
                 } else {
-                    Icons.Filled.KeyboardArrowRight
+                    Icons.AutoMirrored.Filled.KeyboardArrowRight
                 },
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        if (root) {
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
             )
         }
     }
@@ -390,20 +526,22 @@ private fun ArticleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp)
+            .heightIn(min = 48.dp)
             .clickable(
                 onClickLabel = stringResource(R.string.knowledge_open_article, node.title),
                 onClick = onClick,
             )
-            .padding(start = 36.dp, end = 16.dp),
+            .padding(start = 44.dp, end = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(11.dp),
     ) {
         Box(
             modifier = Modifier
-                .width(2.dp)
-                .background(MaterialTheme.colorScheme.outlineVariant)
-                .heightIn(min = 22.dp),
+                .size(4.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    shape = CircleShape,
+                ),
         )
         Text(
             text = node.title,
@@ -411,23 +549,19 @@ private fun ArticleRow(
                 .weight(1f)
                 .padding(vertical = 10.dp),
             style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
 
 @Composable
 private fun CountBadge(count: Int) {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    ) {
-        Text(
-            text = stringResource(R.string.knowledge_article_count, count),
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            style = MaterialTheme.typography.labelMedium,
-        )
-    }
+    Text(
+        text = stringResource(R.string.knowledge_article_count, count),
+        modifier = Modifier.padding(horizontal = 4.dp),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 @Composable
@@ -437,28 +571,31 @@ private fun SearchResultCard(
     onClick: () -> Unit,
 ) {
     val highlightColor = MaterialTheme.colorScheme.primary
-    Card(
+    Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            .padding(horizontal = 20.dp, vertical = 5.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
         ),
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             Text(
                 text = highlight(result.article.title, query, highlightColor),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = result.breadcrumb,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -467,8 +604,75 @@ private fun SearchResultCard(
                 Text(
                     text = highlight(snippet, query, highlightColor),
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 4,
                     overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReferenceListCard(
+    table: ReferenceTable,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 5.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        shape = RoundedCornerShape(13.dp),
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_calc_table_chart),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(21.dp),
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                Text(
+                    text = table.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (table.short.isNotBlank()) {
+                    Text(
+                        text = table.short,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.knowledge_table_rows, table.rowCount),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

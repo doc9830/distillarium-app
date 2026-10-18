@@ -1,6 +1,7 @@
 package ru.distillarium
 
 import android.app.Application
+import ru.distillarium.batches.BatchReminderScheduler
 import ru.distillarium.content.ContentUpdateScheduler
 
 class DistillariumApp : Application() {
@@ -11,5 +12,6 @@ class DistillariumApp : Application() {
         // Инициализация контейнера до планировщика: Worker возьмёт контент отсюда.
         container
         ContentUpdateScheduler.schedule(this)
+        BatchReminderScheduler.schedule(this)
     }
 }

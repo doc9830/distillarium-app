@@ -6,7 +6,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import ru.distillarium.calculators.Calculators
 import ru.distillarium.core.content.ContentInstaller
+import ru.distillarium.recipes.RecipeLoader
 
 /** Проверяет вики на том же пакете, который попадёт в APK. */
 class EmbeddedWikiTest {
@@ -23,10 +25,11 @@ class EmbeddedWikiTest {
         )
         val library = WikiLoader.load(File(temp.root, "files/content/current"))
 
-        assertEquals("2026.10.1", library.contentVersion)
+        assertEquals("2026.10.3", library.contentVersion)
         assertEquals(32, library.articles.size)
         assertEquals(6, library.roots.size)
         assertEquals(33, library.redirects.size)
+        assertEquals(6, library.referenceTables.size)
         assertTrue(library.tags.isNotEmpty())
 
         library.redirects.values.forEach { target ->
@@ -34,7 +37,17 @@ class EmbeddedWikiTest {
         }
         library.articles.flatMap { article -> WikiLinks.targets(article.body) }
             .forEach { target ->
-                assertTrue("битая ссылка: $target", library.resolve(target) != null)
+                when {
+                    target.startsWith("ref:") ->
+                        assertTrue("битая ссылка: $target", library.resolveReference(target) != null)
+                    target.startsWith("calc:") ->
+                        assertTrue(
+                            "нет калькулятора: $target",
+                            Calculators.byId(target.removePrefix("calc:")) != null,
+                        )
+                    target.startsWith("recipe:") -> Unit
+                    else -> assertTrue("битая ссылка: $target", library.resolve(target) != null)
+                }
             }
 
         val measurements = requireNotNull(library.article("equipment/measurements")) {
@@ -56,5 +69,17 @@ class EmbeddedWikiTest {
             library.backlinks("processes/separate/heads-hearts-tails")
                 .any { it.id == "problems/off-flavour" },
         )
+
+        val recipes = RecipeLoader.load(File(temp.root, "files/content/current"))
+        assertEquals(6, recipes.size)
+        recipes.forEach { recipe ->
+            assertTrue("у рецепта ${recipe.id} нет шагов", recipe.steps.isNotEmpty())
+            recipe.steps.mapNotNull { it.wikiId }.forEach { wikiId ->
+                assertTrue(
+                    "рецепт ${recipe.id} ведёт на отсутствующую статью: $wikiId",
+                    library.resolve(wikiId) != null,
+                )
+            }
+        }
     }
 }
