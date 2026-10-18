@@ -106,10 +106,7 @@ class UpdatesViewModel(application: Application) : AndroidViewModel(application)
                 Log.w(TAG, "Проверка обновлений: сеть недоступна", error)
                 _state.update {
                     if (silent) {
-                        it.copy(
-                            status = "Не удалось проверить обновления. Работаем офлайн.",
-                            error = null,
-                        )
+                        it.copy(status = null, error = null)
                     } else {
                         it.copy(error = NETWORK_ERROR)
                     }
@@ -118,7 +115,7 @@ class UpdatesViewModel(application: Application) : AndroidViewModel(application)
                 Log.w(TAG, "Проверка обновлений отклонена", error)
                 _state.update {
                     if (silent) {
-                        it.copy(status = error.message ?: "Обновления недоступны", error = null)
+                        it.copy(status = null, error = null)
                     } else {
                         it.copy(error = userMessage(error))
                     }
@@ -127,7 +124,7 @@ class UpdatesViewModel(application: Application) : AndroidViewModel(application)
                 Log.e(TAG, "Проверка обновлений не удалась", error)
                 _state.update {
                     if (silent) {
-                        it.copy(status = "Не удалось проверить обновления.", error = null)
+                        it.copy(status = null, error = null)
                     } else {
                         it.copy(error = userMessage(error))
                     }
