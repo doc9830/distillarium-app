@@ -1,0 +1,183 @@
+{
+  "contentVersion": "2026.10.1",
+  "schemaVersion": 1,
+  "minAppVersion": "0.1.0",
+  "released": "2026-10-18",
+  "packSize": 75796,
+  "packSha256": "09df4e19ea905cd3d16d0530a8e358cf5feb5651d0a4c9aba5936042d4bed7dc",
+  "files": [
+    {
+      "path": "redirects.json",
+      "sha256": "98d70ca09608807004d01104add9a34a2e37442ad5bc3771703b2da810edeb17",
+      "size": 2112
+    },
+    {
+      "path": "search/index.json",
+      "sha256": "eb13b4af22c75027499bce010f07658d1a76c16def28087407cb6a80c94e4b3d",
+      "size": 126840
+    },
+    {
+      "path": "wiki/equipment/airlock.md",
+      "sha256": "c6cd6d3006a38cbdafc44106d94c183059077dd4a5135fae2bfb456093146b53",
+      "size": 6473
+    },
+    {
+      "path": "wiki/equipment/condenser.md",
+      "sha256": "3b5993420a9b9fbd103efd8f00969a767fb844fc75552d7d4401e79fb99d3d25",
+      "size": 725
+    },
+    {
+      "path": "wiki/equipment/dephlegmator.md",
+      "sha256": "8fda92d4ccc20de28594f4ff03cf51c7ebc9bbc58a2442ccb50c0a3e7c30a109",
+      "size": 919
+    },
+    {
+      "path": "wiki/equipment/measurements.md",
+      "sha256": "9ec17e78f1550df70eadc09e48e77ec944d61d7be0938714357608dc7d99a711",
+      "size": 7667
+    },
+    {
+      "path": "wiki/equipment/parrot.md",
+      "sha256": "a7a4cb3c2f055df0e53408e01c60ee93730333ec1fe80e411e965bc4a7139158",
+      "size": 2255
+    },
+    {
+      "path": "wiki/equipment/still-pot.md",
+      "sha256": "897e4ebb2305c3e4fd892d687b10698c229e2bd68011137070017e7e8caac39f",
+      "size": 953
+    },
+    {
+      "path": "wiki/problems/high-acidity.md",
+      "sha256": "d543fade6b688c8568350a90869de032edee85443c1ac9eee1d0b431335cf212",
+      "size": 736
+    },
+    {
+      "path": "wiki/problems/low-abv.md",
+      "sha256": "cfcb63e73d1763aa5b2af5534629946a26337cbbc9f7f585462a70e473fe19b7",
+      "size": 615
+    },
+    {
+      "path": "wiki/problems/no-bubbles.md",
+      "sha256": "692b1b4af18400e65f0239f0a80a8064b94251cca65c85c3fbe4995496769687",
+      "size": 2921
+    },
+    {
+      "path": "wiki/problems/off-flavour.md",
+      "sha256": "780ba2fe80a0c7f9e33cc6eedd68bf4e2cd2ba134fca02dfc29b927787fca664",
+      "size": 814
+    },
+    {
+      "path": "wiki/problems/stuck-ferment.md",
+      "sha256": "e302c7c1290288a2354b7715c4a4e764811d7caee40c37202ccbc4af34b228e0",
+      "size": 14812
+    },
+    {
+      "path": "wiki/processes/beer/simple-brew.md",
+      "sha256": "aba6242207f64dc7c444d2d2db0b5943f8e2b72ba86bcaa05bd3f566e8dbd8f5",
+      "size": 711
+    },
+    {
+      "path": "wiki/processes/ferment/primary.md",
+      "sha256": "a70387faa6fe68f5fbe969a5cc3e4aa2ccdcb4ec6f432da7de2a742a228e9c19",
+      "size": 717
+    },
+    {
+      "path": "wiki/processes/finish/dilution.md",
+      "sha256": "227c5d38c2e798d1abbcbe7f6c2e4cfdc9c1850b4ec4f803b22faa3262b8698f",
+      "size": 841
+    },
+    {
+      "path": "wiki/processes/finish/fining.md",
+      "sha256": "80fa2d0db5856b0b3ca4e67abd4222ccd0dc7f9a14048329f90576516b708376",
+      "size": 744
+    },
+    {
+      "path": "wiki/processes/prepare/grape.md",
+      "sha256": "cd4d602813cf10e09a42d70061e6674d3e80b1f79ebecf2da4fc57bb7c936067",
+      "size": 872
+    },
+    {
+      "path": "wiki/processes/separate/first-run.md",
+      "sha256": "d48a7de40e319c7eee23e0f7961a8ece0e784905267d9350d4e81b2edc274561",
+      "size": 3067
+    },
+    {
+      "path": "wiki/processes/separate/fractional.md",
+      "sha256": "f7a6f5175f6657f77243f0864510997139c0549468244f049670894287cfaa8e",
+      "size": 795
+    },
+    {
+      "path": "wiki/processes/separate/heads-hearts-tails.md",
+      "sha256": "4adcd12a3b7d87e1dadde83830f1f7be339d802db343423500b454b92798474a",
+      "size": 4879
+    },
+    {
+      "path": "wiki/processes/separate/racking.md",
+      "sha256": "86a249a6b792534fe6f1f4527ff8531e19f108de3df610e7b21b2bf2bf0a0631",
+      "size": 875
+    },
+    {
+      "path": "wiki/processes/separate/second-run-column.md",
+      "sha256": "630e1a1a9e3fcedbe1192dad7dd41f854761b6d58d1d8acdff95b9d4e9174616",
+      "size": 18332
+    },
+    {
+      "path": "wiki/processes/separate/second-run-pot.md",
+      "sha256": "34619861adefdcc7bd83b388e9d68d88a28df734bd50408212c87568f45349e0",
+      "size": 3167
+    },
+    {
+      "path": "wiki/raw/distiller-yeast.md",
+      "sha256": "bd3f2498fa1e4b7b6a84407afef10c40025be37f6a795f1d48c02bb64ed022de",
+      "size": 6815
+    },
+    {
+      "path": "wiki/raw/sugar-glucose.md",
+      "sha256": "f9703b6a37ca58b61e4eed1ad38cf96364c565808d4b7a11d9a19398f95e4a83",
+      "size": 587
+    },
+    {
+      "path": "wiki/raw/yeast.md",
+      "sha256": "eec39b31c6175a6931ca45cbf1d73ffed04637f15c3e7439c397687b934214b3",
+      "size": 794
+    },
+    {
+      "path": "wiki/recipes/apple-wine-sweet.md",
+      "sha256": "77826b45b63cf492ecc16b6366f5423e64c4c48d2a37541427b41c9651fdf840",
+      "size": 11947
+    },
+    {
+      "path": "wiki/recipes/cider-25.md",
+      "sha256": "33dc5b103abda126c7ae106dcef08df75e72062757a558d263b4ab76f8353100",
+      "size": 10812
+    },
+    {
+      "path": "wiki/recipes/sugar-wash-classic.md",
+      "sha256": "93eaad1aaf0bc9841bb160d31e580395758a4d1ccb820f7519a5b32244adc6be",
+      "size": 951
+    },
+    {
+      "path": "wiki/recipes/sugar-wash-spirit-yeast.md",
+      "sha256": "6305e51d2ae275939fc9b6ce77dc89652c52052587e3195abe6f4bc857de21af",
+      "size": 4471
+    },
+    {
+      "path": "wiki/recipes/sugar-wash-turbo.md",
+      "sha256": "ab88a6b04b92fd09711e0f2a4b7bb639b70a5444271e842dcceac3bb95b8877d",
+      "size": 5780
+    },
+    {
+      "path": "wiki/recipes/wheat-sour-starter.md",
+      "sha256": "63547c4c89aa99a0152001bb427ea7a920e6b326f483a872936d05b282eb37a2",
+      "size": 6879
+    },
+    {
+      "path": "wiki/reference/hydrometer-temp.md",
+      "sha256": "4b1d199da3fbb06fbd6ec551c3053eb68d235271fd911396895dc155215d20e5",
+      "size": 2826
+    }
+  ],
+  "searchIndex": "search/index.json",
+  "searchIndexSha256": "eb13b4af22c75027499bce010f07658d1a76c16def28087407cb6a80c94e4b3d",
+  "redirects": "redirects.json"
+}

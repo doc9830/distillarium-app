@@ -1,5 +1,6 @@
 *.iml
 .gradle/
+.kotlin/
 local.properties
 .idea/
 .DS_Store
@@ -13,3 +14,4 @@ captures/
 *.jks
 keystore.properties
 app/release/
+*.hprof

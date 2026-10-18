@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Дистиллярий</string>
+
+    <string name="updates_title">Обновления</string>
+    <string name="installed_content">Установленный контент</string>
+    <string name="version_label">Версия %1$s</string>
+    <string name="schema_label">Схема %1$d</string>
+    <string name="released_label">Опубликован %1$s</string>
+    <string name="installed_at_label">Установлен %1$s</string>
+    <string name="source_label">Источник: %1$s</string>
+    <string name="articles_label">Статей: %1$d</string>
+    <string name="previous_version">Предыдущая версия</string>
+    <string name="previous_none">нет — откатываться некуда</string>
+    <string name="embedded_version_value">Встроенный пакет: %1$s</string>
+    <string name="embedded_none">неизвестно</string>
+    <string name="check_updates">Проверить обновления</string>
+    <string name="rollback">Вернуться к предыдущей версии</string>
+    <string name="rollback_hint">Откат не затрагивает партии и настройки.</string>
+    <string name="updates_note">Обновляется только контент: статьи, справочники и шаблоны. Партии, замеры и настройки остаются на месте.</string>
+    <string name="loading">Готовим контент…</string>
+    <string name="please_wait">Подождите…</string>
+    <string name="progress_description">Загрузка обновления</string>
+    <string name="error_title">Не получилось</string>
+</resources>
