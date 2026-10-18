@@ -104,6 +104,18 @@ function main() {
     fs.mkdirSync(options.assetsDir, { recursive: true });
     fs.copyFileSync(packPath, path.join(options.assetsDir, "content-pack.zip"));
     fs.copyFileSync(manifestPath, path.join(options.assetsDir, "manifest.json"));
+  } else {
+    const assetPack = path.join(options.assetsDir, "content-pack.zip");
+    const assetManifest = path.join(options.assetsDir, "manifest.json");
+    if (!fs.existsSync(assetPack) || !fs.existsSync(assetManifest)) {
+      fail(`в ${options.assetsDir} нет content-pack.zip или manifest.json`);
+    }
+    if (sha256(fs.readFileSync(assetPack)) !== sha256(pack)) {
+      fail("assets/content-pack.zip не совпадает с собранным пакетом");
+    }
+    if (sha256(fs.readFileSync(assetManifest)) !== sha256(fs.readFileSync(manifestPath))) {
+      fail("assets/manifest.json не совпадает с собранным манифестом");
+    }
   }
 
   console.log(`${options.check ? "Проверено" : "Скопировано"}:`);
