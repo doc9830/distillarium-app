@@ -35,6 +35,15 @@ class ContentRepository(
         mutex.withLock { installer.installedContent() }
     }
 
+    /** Каталог активного пакета; при необходимости сначала ставит встроенный. */
+    suspend fun currentDirectory(): File = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            if (installer.installedContent() == null) ensureInstalledLocked()
+            File(context.filesDir, ContentInstaller.CONTENT_DIR)
+                .resolve(ContentInstaller.CURRENT_DIR)
+        }
+    }
+
     suspend fun previous(): InstalledContent? = withContext(Dispatchers.IO) {
         mutex.withLock { installer.previousContent() }
     }

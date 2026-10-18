@@ -22,4 +22,46 @@
     <string name="please_wait">Подождите…</string>
     <string name="progress_description">Загрузка обновления</string>
     <string name="error_title">Не получилось</string>
+
+    <string name="knowledge_title">Знания</string>
+    <string name="knowledge_version">Версия контента %1$s</string>
+    <string name="knowledge_loading">Открываем знания…</string>
+    <string name="knowledge_search_placeholder">Поиск по знаниям</string>
+    <string name="knowledge_search_clear">Очистить поиск</string>
+    <string name="knowledge_search_results">Найдено: %1$d</string>
+    <string name="knowledge_search_empty_title">Ничего не нашлось</string>
+    <string name="knowledge_search_empty_text">Попробуйте другое слово. Поиск понимает и бытовые названия: «сивушные» найдёт хвосты, «сахаромер» — ареометр.</string>
+    <string name="knowledge_all_tags">Все</string>
+    <string name="knowledge_tag_empty_title">В этом теге пока нет статей</string>
+    <string name="knowledge_tag_empty_text">Снимите фильтр и посмотрите всё дерево.</string>
+    <string name="knowledge_retry">Попробовать снова</string>
+    <string name="knowledge_empty_title">Статей пока нет</string>
+    <string name="knowledge_empty_text">Проверьте обновления контента на вкладке «Обновления».</string>
+    <string name="knowledge_open_article">Открыть статью %1$s</string>
+    <string name="knowledge_tree_expand">Раскрыть раздел %1$s</string>
+    <string name="knowledge_tree_collapse">Свернуть раздел %1$s</string>
+    <string name="knowledge_article_count">%1$d</string>
+
+    <string name="article_back">Назад</string>
+    <string name="article_title">Статья</string>
+    <string name="article_loading">Открываем статью…</string>
+    <string name="article_toc">Оглавление</string>
+    <string name="article_share">Поделиться</string>
+    <string name="article_share_chooser">Поделиться статьёй</string>
+    <string name="article_up">Наверх</string>
+    <string name="article_reading_time">%1$d мин чтения</string>
+    <string name="article_short">Коротко</string>
+    <string name="article_updated">Обновлено %1$s</string>
+    <string name="article_backlinks">Сюда ссылаются</string>
+    <string name="article_sources">Источники</string>
+    <string name="article_not_found">Статья не найдена</string>
+    <string name="article_not_found_text">Ссылка ведёт на статью, которой нет в установленном пакете. Вернитесь назад или проверьте обновления.</string>
+    <string name="article_toc_empty">В этой статье нет заголовков</string>
+    <string name="article_text_size">Размер текста</string>
+    <string name="article_text_smaller">Уменьшить текст</string>
+    <string name="article_text_larger">Увеличить текст</string>
+    <string name="article_text_size_value">%1$d %%</string>
+
+    <string name="nav_knowledge">Знания</string>
+    <string name="nav_updates">Обновления</string>
 </resources>

@@ -1,0 +1,60 @@
+package ru.distillarium.knowledge
+
+import java.io.File
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import ru.distillarium.core.content.ContentInstaller
+
+/** Проверяет вики на том же пакете, который попадёт в APK. */
+class EmbeddedWikiTest {
+    @get:Rule
+    val temp = TemporaryFolder()
+
+    @Test
+    fun embeddedPackLoadsTreeRedirectsSearchAndBacklinks() {
+        val assets = File("src/main/assets")
+        val installer = ContentInstaller(temp.newFolder("files"), "0.1.0")
+        installer.ensureInstalled(
+            File(assets, "content-pack.zip"),
+            File(assets, "manifest.json"),
+        )
+        val library = WikiLoader.load(File(temp.root, "files/content/current"))
+
+        assertEquals("2026.10.1", library.contentVersion)
+        assertEquals(32, library.articles.size)
+        assertEquals(6, library.roots.size)
+        assertEquals(33, library.redirects.size)
+        assertTrue(library.tags.isNotEmpty())
+
+        library.redirects.values.forEach { target ->
+            assertTrue("редирект ведёт в пустоту: $target", library.resolve(target) != null)
+        }
+        library.articles.flatMap { article -> WikiLinks.targets(article.body) }
+            .forEach { target ->
+                assertTrue("битая ссылка: $target", library.resolve(target) != null)
+            }
+
+        val measurements = requireNotNull(library.article("equipment/measurements")) {
+            "нет статьи про измерения"
+        }
+        assertEquals(measurements, library.resolve("/articles/areometr"))
+
+        val synonymResults = library.search("сивушные")
+        assertTrue(synonymResults.any { it.article.id == "problems/off-flavour" })
+        val sugarMeterResults = library.search("сахаромер")
+        assertTrue(sugarMeterResults.any { it.article.id == "equipment/measurements" })
+
+        val heads = requireNotNull(library.article("processes/separate/heads-hearts-tails")) {
+            "нет статьи про фракции"
+        }
+        assertTrue(heads.headings.any { it.title == "Коротко" })
+        assertEquals(3, heads.segments.filterIsInstance<ArticleSegment.Tabs>().single().tabs.size)
+        assertTrue(
+            library.backlinks("processes/separate/heads-hearts-tails")
+                .any { it.id == "problems/off-flavour" },
+        )
+    }
+}

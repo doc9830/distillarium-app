@@ -9,6 +9,7 @@ import ru.distillarium.content.HttpContentClient
 import ru.distillarium.core.content.ContentInstaller
 import ru.distillarium.core.content.ContentUpdater
 import ru.distillarium.core.content.FileEtagStore
+import ru.distillarium.knowledge.WikiRepository
 
 /** Собирает зависимости приложения. Без DI-фреймворков: их пока нечем оправдать. */
 class AppContainer(context: Context) {
@@ -46,4 +47,6 @@ class AppContainer(context: Context) {
         manifestUrl = manifestUrl,
         packUrl = packUrl,
     )
+
+    val wikiRepository: WikiRepository = WikiRepository(contentRepository)
 }
