@@ -8,7 +8,7 @@ plugins {
 
 val contentManifestUrl = providers
     .gradleProperty("distillarium.contentManifestUrl")
-    .orElse("https://github.com/distillarium/distillarium-content/releases/download/content-latest/manifest.json")
+    .orElse("https://github.com/doc9830/distillarium-content/releases/download/content-latest/manifest.json")
     .get()
 
 fun String.asBuildConfigString(): String =
