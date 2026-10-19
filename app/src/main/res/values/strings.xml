@@ -32,9 +32,12 @@
     <string name="knowledge_search_results">Найдено: %1$d</string>
     <string name="knowledge_search_empty_title">Ничего не нашлось</string>
     <string name="knowledge_search_empty_text">Попробуйте другое слово. Поиск понимает и бытовые названия: «сивушные» найдёт хвосты, «сахаромер» — ареометр.</string>
-    <string name="knowledge_all_tags">Все</string>
-    <string name="knowledge_tag_empty_title">В этом теге пока нет статей</string>
-    <string name="knowledge_tag_empty_text">Снимите фильтр и посмотрите всё дерево.</string>
+    <string name="knowledge_categories_title">Категории</string>
+    <string name="knowledge_categories_text">Выберите тему. Статья может быть сразу в нескольких категориях.</string>
+    <string name="knowledge_all_categories">Все категории</string>
+    <string name="knowledge_category_articles">Статей в категории: %1$d</string>
+    <string name="knowledge_tag_empty_title">В этой категории пока нет статей</string>
+    <string name="knowledge_tag_empty_text">Вернитесь ко всем категориям и выберите другую тему.</string>
     <string name="knowledge_retry">Попробовать снова</string>
     <string name="knowledge_empty_title">Статей пока нет</string>
     <string name="knowledge_empty_text">Проверьте обновления контента на вкладке «Обновления».</string>
@@ -79,6 +82,16 @@
     <string name="calc_details">Как считается</string>
     <string name="calc_result_hint">Результат обновляется сразу</string>
     <string name="calc_more_results">Ещё показатели</string>
+    <string name="calc_favorites">Избранное</string>
+    <string name="calc_all">Все</string>
+    <string name="calc_favorite_add">Добавить «%1$s» в избранное</string>
+    <string name="calc_favorite_remove">Убрать «%1$s» из избранного</string>
+    <string name="calc_batch_subtitle">Партия «%1$s»</string>
+    <string name="calc_save_to_batch">Сохранить в партию</string>
+    <string name="calc_saved_to_batch">Сохранено. Запись добавлена в журнал партии.</string>
+    <string name="calc_save_sheet_title">Сохранить расчёт</string>
+    <string name="calc_save_note">Заметка к расчёту</string>
+    <string name="calc_save_no_batches">Сначала создайте партию — расчёт сохранится в её журнал.</string>
     <string name="calc_not_found">Калькулятор не найден</string>
     <string name="calc_not_found_text">Возможно, ссылка устарела. Вернитесь к списку расчётов и выберите нужный.</string>
 
@@ -102,13 +115,17 @@
     <string name="article_text_larger">Увеличить текст</string>
     <string name="article_text_size_value">%1$d %%</string>
 
-    <string name="nav_now">Сейчас</string>
+    <string name="nav_now">Главная</string>
     <string name="nav_batches">Партии</string>
-    <string name="nav_knowledge">Знания</string>
-    <string name="nav_calculators">Расчёты</string>
     <string name="nav_updates">Обновления</string>
 
-    <string name="now_title">Сейчас</string>
+    <string name="now_title">Главная</string>
+    <string name="now_knowledge">Знания</string>
+    <string name="now_knowledge_text">Статьи, справочники и ответы на вопросы</string>
+    <string name="now_calculators">Расчёты</string>
+    <string name="now_calculators_text">Калькуляторы и сохранённые формулы</string>
+    <string name="now_open_knowledge">Открыть знания</string>
+    <string name="now_open_calculators">Открыть расчёты</string>
     <string name="now_subtitle">Активных: %1$d · просрочено: %2$d</string>
     <string name="now_loading">Открываем партии…</string>
     <string name="now_tasks_title">Пора сделать</string>
@@ -206,7 +223,18 @@
     <string name="batch_detail_notes_hint">Что важно помнить об этой партии</string>
     <string name="batch_detail_save_notes">Сохранить заметки</string>
     <string name="batch_detail_more">Действия с партией</string>
+    <string name="batch_delete">Удалить партию</string>
+    <string name="batch_delete_title">Удалить партию?</string>
+    <string name="batch_delete_text">«%1$s» и все её шаги, замеры, журнал и расчёты будут удалены без возможности восстановления.</string>
+    <string name="batch_delete_confirm">Удалить</string>
+    <string name="batch_delete_cancel">Отмена</string>
+    <string name="batch_delete_action">Удалить «%1$s»</string>
     <string name="batch_detail_none">Нет</string>
+    <string name="batch_detail_calcs">Расчёты</string>
+    <string name="batch_detail_add_calc">Добавить расчёт</string>
+    <string name="batch_detail_calcs_empty">Сохранённые расчёты останутся в партии: с введёнными данными и результатом.</string>
+    <string name="batch_detail_pick_calc">Какой расчёт открыть</string>
+    <string name="batch_calc_no_result">Результат не сохранён</string>
 
     <string name="batch_step_done">Выполнено</string>
     <string name="batch_step_pending">Ожидает</string>
@@ -238,6 +266,7 @@
     <string name="journal_kind_addition">Добавка</string>
     <string name="journal_kind_racking">Переливка</string>
     <string name="journal_kind_tasting">Дегустация</string>
+    <string name="journal_kind_calculation">Расчёт</string>
 
     <string name="reminder_channel_name">Напоминания о партиях</string>
     <string name="reminder_channel_description">Сроки шагов и подсказки по партиям</string>

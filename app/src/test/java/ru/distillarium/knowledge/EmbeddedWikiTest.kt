@@ -25,8 +25,8 @@ class EmbeddedWikiTest {
         )
         val library = WikiLoader.load(File(temp.root, "files/content/current"))
 
-        assertEquals("2026.10.3", library.contentVersion)
-        assertEquals(32, library.articles.size)
+        assertEquals("2026.10.4", library.contentVersion)
+        assertEquals(33, library.articles.size)
         assertEquals(6, library.roots.size)
         assertEquals(33, library.redirects.size)
         assertEquals(6, library.referenceTables.size)
@@ -71,7 +71,7 @@ class EmbeddedWikiTest {
         )
 
         val recipes = RecipeLoader.load(File(temp.root, "files/content/current"))
-        assertEquals(6, recipes.size)
+        assertEquals(7, recipes.size)
         recipes.forEach { recipe ->
             assertTrue("у рецепта ${recipe.id} нет шагов", recipe.steps.isNotEmpty())
             recipe.steps.mapNotNull { it.wikiId }.forEach { wikiId ->

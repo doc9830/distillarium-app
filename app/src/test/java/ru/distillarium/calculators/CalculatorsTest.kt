@@ -445,6 +445,90 @@ class CalculatorsTest {
         assertNull(field.value("Infinity"))
     }
 
+    @Test
+    fun catalogLinksStayInsideCatalogAndFillTargetFields() {
+        Calculators.all.forEach { calculator ->
+            calculator.links.forEach { link ->
+                val target = requireNotNull(Calculators.byId(link.targetId)) {
+                    "${calculator.id} ведёт на несуществующий ${link.targetId}"
+                }
+                assertTrue(link.title.isNotBlank())
+                assertTrue(link.values.isNotEmpty())
+                link.values.forEach { (field, _) ->
+                    assertTrue(
+                        "${calculator.id} → ${target.id}: нет поля $field",
+                        target.fields.any { it.key == field },
+                    )
+                }
+                val result = calculator.calculate(
+                    calculator.fields.associate { it.key to it.default },
+                )
+                val prefill = calculator.transfer(link, calculator.defaults(), result)
+                assertEquals(link.values.size, prefill.size)
+                assertTrue(
+                    "${calculator.id} → ${target.id}: ${target.inputErrors(target.defaults() + prefill)}",
+                    target.inputErrors(target.defaults() + prefill).isEmpty(),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun dilutionChainCarriesVolumeAndStrengthWithoutRetyping() {
+        val dilution = requireNotNull(Calculators.byId("dilution"))
+        val dilutionValues = dilution.defaults() + mapOf("volume" to "10", "strength" to "70", "target" to "40")
+        val dilutionResult = dilution.calculate(numbers(dilution, dilutionValues))
+
+        val heads = requireNotNull(Calculators.byId("heads-tails"))
+        val headsPrefill = dilution.transfer(
+            link = dilution.links.single { it.targetId == "heads-tails" },
+            values = dilutionValues,
+            result = dilutionResult,
+        )
+        assertEquals(17.5, headsPrefill.getValue("volume").replace(',', '.').toDouble(), 1e-6)
+        assertEquals("40", headsPrefill["strength"])
+
+        val headsValues = heads.defaults() + headsPrefill
+        val headsResult = heads.calculate(numbers(heads, headsValues))
+        val body = headsResult.outputs[2].value
+        val takeoff = requireNotNull(Calculators.byId("takeoff-rate"))
+        val takeoffPrefill = heads.transfer(
+            link = heads.links.single { it.targetId == "takeoff-rate" },
+            values = headsValues,
+            result = headsResult,
+        )
+        assertEquals(
+            CalculatorField.number(body),
+            takeoffPrefill["total"],
+        )
+        assertTrue(takeoff.inputErrors(takeoff.defaults() + takeoffPrefill).isEmpty())
+    }
+
+    @Test
+    fun batchPrefillOnlyUsesMeaningfulFields() {
+        val context = CalculatorBatchContext(
+            volume = 22.0,
+            initialGravity = 1.050,
+            latestGravity = 1.010,
+            latestTemperature = 21.5,
+            calculatedAbv = 5.25,
+        )
+        val abv = requireNotNull(Calculators.byId("abv"))
+        assertEquals(
+            mapOf("og" to "1,05", "fg" to "1,01"),
+            abv.prefillFrom(context),
+        )
+        val heads = requireNotNull(Calculators.byId("heads-tails"))
+        assertEquals(mapOf("volume" to "22"), heads.prefillFrom(context))
+        val brix = requireNotNull(Calculators.byId("brix"))
+        assertTrue(brix.prefillFrom(context).isEmpty())
+    }
+
+    private fun numbers(calculator: Calculator, values: Map<String, String>): Map<String, Double> =
+        calculator.fields.associate { field ->
+            field.key to requireNotNull(field.value(values[field.key].orEmpty()))
+        }
+
     private fun calculate(id: String, vararg values: Pair<String, Double>): CalcResult {
         val calculator = requireNotNull(Calculators.byId(id)) { "Нет калькулятора $id" }
         return calculator.calculate(values.toMap())

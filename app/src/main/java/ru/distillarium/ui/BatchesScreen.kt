@@ -42,8 +42,11 @@ fun BatchesScreen(
     state: BatchesUiState,
     onOpenBatch: (Long) -> Unit,
     onNewBatch: () -> Unit,
+    onDeleteBatch: (Long) -> Unit,
 ) {
     var filterName by rememberSaveable { mutableStateOf(BatchFilter.All.name) }
+    var pendingDeleteId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val pendingDelete = pendingDeleteId?.let { id -> state.cards.firstOrNull { it.batch.id == id } }
     val filter = BatchFilter.entries.firstOrNull { it.name == filterName } ?: BatchFilter.All
     val visible = state.cards.filter { details ->
         when (filter) {
@@ -140,11 +143,23 @@ fun BatchesScreen(
                             details = details,
                             now = now,
                             onClick = { onOpenBatch(details.batch.id) },
+                            onDelete = { pendingDeleteId = details.batch.id },
                         )
                     }
                 }
             }
         }
+    }
+    if (pendingDelete != null) {
+        DeleteBatchDialog(
+            title = pendingDelete.batch.title,
+            onDismiss = { pendingDeleteId = null },
+            onConfirm = {
+                val id = pendingDelete.batch.id
+                pendingDeleteId = null
+                onDeleteBatch(id)
+            },
+        )
     }
 }
 

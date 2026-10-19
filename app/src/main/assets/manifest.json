@@ -1,10 +1,10 @@
 {
-  "contentVersion": "2026.10.3",
+  "contentVersion": "2026.10.4",
   "schemaVersion": 1,
   "minAppVersion": "0.1.0",
   "released": "2026-10-18",
-  "packSize": 90513,
-  "packSha256": "840d22cbdaca6180e2de505fb2612ffae093521e057800328e5d87446986ace6",
+  "packSize": 93903,
+  "packSha256": "32ae04a51c643838bb12a9eec5654ed4348dc7156d1c7f0162f02bf04f6b9bab",
   "files": [
     {
       "path": "calculators.json",
@@ -40,6 +40,11 @@
       "path": "recipes/wheat-sour-starter.json",
       "sha256": "48bcd02a8713106fa72832296ec55c094dc03e654ae00db6003686272e6e310b",
       "size": 1353
+    },
+    {
+      "path": "recipes/wine-to-distillate.json",
+      "sha256": "74f94c90786c41c2e9300e0d371f43f27cf46fa9e8332e83a6bcb6bf5da34aa5",
+      "size": 1448
     },
     {
       "path": "redirects.json",
@@ -78,8 +83,8 @@
     },
     {
       "path": "search/index.json",
-      "sha256": "2227c91e57fd7790a302bbbae47451e9fc32990d882af274be954397eb587f44",
-      "size": 129143
+      "sha256": "c9d7a12daed52ab57e0ef97cf29b3e787ac854297c3ccbe323c721cf0472a33c",
+      "size": 133298
     },
     {
       "path": "wiki/equipment/airlock.md",
@@ -237,12 +242,17 @@
       "size": 6879
     },
     {
+      "path": "wiki/recipes/wine-to-distillate.md",
+      "sha256": "947ec28aab157ca3961ce90c5b6530b753836b51d7f84fb4964eef49b1a1f033",
+      "size": 4212
+    },
+    {
       "path": "wiki/reference/hydrometer-temp.md",
       "sha256": "54e83a53d16338d4a048d3d63a49c67ad53fb98bb98dab180cfba6a3bc546aa2",
       "size": 3049
     }
   ],
   "searchIndex": "search/index.json",
-  "searchIndexSha256": "2227c91e57fd7790a302bbbae47451e9fc32990d882af274be954397eb587f44",
+  "searchIndexSha256": "c9d7a12daed52ab57e0ef97cf29b3e787ac854297c3ccbe323c721cf0472a33c",
   "redirects": "redirects.json"
 }

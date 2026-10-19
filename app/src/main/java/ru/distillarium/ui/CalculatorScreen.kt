@@ -25,17 +25,25 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,15 +63,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Locale
 import ru.distillarium.R
+import ru.distillarium.batches.BatchDetails
+import ru.distillarium.batches.BatchStatus
 import ru.distillarium.calculators.CalcOutput
 import ru.distillarium.calculators.CalcResult
 import ru.distillarium.calculators.Calculator
+import ru.distillarium.calculators.CalculatorBatchContext
 import ru.distillarium.calculators.CalculatorField
 import ru.distillarium.calculators.CalculatorGroup
+import ru.distillarium.calculators.CalculatorLink
 import ru.distillarium.calculators.Calculators
 
 @Composable
-fun CalculatorsScreen(onOpenCalculator: (String) -> Unit) {
+fun CalculatorsScreen(
+    onOpenCalculator: (String) -> Unit,
+    favorites: Set<String>,
+    onToggleFavorite: (Calculator) -> Unit,
+) {
+    var favoritesOnly by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    val showFavorites = favoritesOnly ?: favorites.isNotEmpty()
+    LaunchedEffect(favorites) {
+        if (favorites.isEmpty()) {
+            favoritesOnly = false
+        } else if (favoritesOnly == null) {
+            favoritesOnly = true
+        }
+    }
+    val visible = if (showFavorites) {
+        Calculators.all.filter { it.id in favorites }
+    } else {
+        Calculators.all
+    }
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
@@ -79,8 +109,29 @@ fun CalculatorsScreen(onOpenCalculator: (String) -> Unit) {
                 .padding(padding),
             contentPadding = PaddingValues(top = 8.dp, bottom = 28.dp),
         ) {
+            if (favorites.isNotEmpty()) {
+                item(key = "favorites-filter") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        FilterChip(
+                            selected = showFavorites,
+                            onClick = { favoritesOnly = true },
+                            label = { Text(stringResource(R.string.calc_favorites)) },
+                        )
+                        FilterChip(
+                            selected = !showFavorites,
+                            onClick = { favoritesOnly = false },
+                            label = { Text(stringResource(R.string.calc_all)) },
+                        )
+                    }
+                }
+            }
             Calculators.groups.forEach { group ->
-                val items = Calculators.all.filter { it.group == group }
+                val items = visible.filter { it.group == group }
                 if (items.isEmpty()) return@forEach
                 item(key = "group:${group.name}") {
                     Text(
@@ -93,7 +144,9 @@ fun CalculatorsScreen(onOpenCalculator: (String) -> Unit) {
                 items(items, key = { it.id }) { calculator ->
                     CalculatorCard(
                         calculator = calculator,
+                        favorite = calculator.id in favorites,
                         onClick = { onOpenCalculator(calculator.id) },
+                        onToggleFavorite = { onToggleFavorite(calculator) },
                     )
                 }
             }
@@ -104,7 +157,9 @@ fun CalculatorsScreen(onOpenCalculator: (String) -> Unit) {
 @Composable
 private fun CalculatorCard(
     calculator: Calculator,
+    favorite: Boolean,
     onClick: () -> Unit,
+    onToggleFavorite: () -> Unit,
 ) {
     Surface(
         onClick = onClick,
@@ -116,7 +171,7 @@ private fun CalculatorCard(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)),
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(start = 16.dp, end = 6.dp, top = 16.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -149,6 +204,20 @@ private fun CalculatorCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                )
+            }
+            IconButton(onClick = onToggleFavorite) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = stringResource(
+                        if (favorite) R.string.calc_favorite_remove else R.string.calc_favorite_add,
+                        calculator.title,
+                    ),
+                    tint = if (favorite) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.outlineVariant
+                    },
                 )
             }
             Icon(
@@ -193,11 +262,39 @@ private fun groupIcon(group: CalculatorGroup): Int = when (group) {
 fun CalculatorDetailScreen(
     calculator: Calculator,
     onBack: () -> Unit,
+    initialValues: Map<String, String> = emptyMap(),
+    batch: BatchDetails? = null,
+    batches: List<BatchDetails> = emptyList(),
+    favorite: Boolean = false,
+    onToggleFavorite: () -> Unit = {},
+    onOpenCalculator: (String, Map<String, String>) -> Unit = { _, _ -> },
+    onSaveToBatch: (Long?, Map<String, String>, CalcResult, String?) -> Unit = { _, _, _, _ -> },
 ) {
     BackHandler(onBack = onBack)
-    var encoded by rememberSaveable(calculator.id) {
-        mutableStateOf(encodeValues(calculator.defaults()))
+    val batchContext = remember(batch) {
+        batch?.let { details ->
+            val ordered = details.measurements.sortedBy { it.at }
+            CalculatorBatchContext(
+                volume = details.batch.volume,
+                initialGravity = ordered.firstOrNull()?.gravity,
+                latestGravity = ordered.lastOrNull()?.gravity,
+                latestTemperature = ordered.lastOrNull()?.temp,
+                calculatedAbv = details.calculatedAbv,
+            )
+        }
     }
+    val initial = remember(calculator.id, batchContext, initialValues) {
+        encodeValues(
+            calculator.defaults() +
+                (batchContext?.let(calculator::prefillFrom) ?: emptyMap()) +
+                initialValues,
+        )
+    }
+    var encoded by rememberSaveable(calculator.id, initial) {
+        mutableStateOf(initial)
+    }
+    var showSave by rememberSaveable(calculator.id) { mutableStateOf(false) }
+    var saved by rememberSaveable(calculator.id, initial) { mutableStateOf(false) }
     val values = remember(encoded) { decodeValues(encoded, calculator.fields) }
     val inputErrors = calculator.inputErrors(values)
     val computed: Result<CalcResult>? = remember(calculator.id, values) {
@@ -212,17 +309,41 @@ fun CalculatorDetailScreen(
             }
         }
     }
+    val result = computed?.getOrNull()
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             DistillariumTopBar(
                 title = calculator.title,
-                subtitle = calculator.group.title,
+                subtitle = batch?.let {
+                    stringResource(R.string.calc_batch_subtitle, it.batch.title)
+                } ?: calculator.group.title,
                 onBack = onBack,
                 backLabel = stringResource(R.string.calc_back),
                 actions = {
-                    IconButton(onClick = { encoded = encodeValues(calculator.defaults()) }) {
+                    IconButton(onClick = onToggleFavorite) {
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = stringResource(
+                                if (favorite) {
+                                    R.string.calc_favorite_remove
+                                } else {
+                                    R.string.calc_favorite_add
+                                },
+                                calculator.title,
+                            ),
+                            tint = if (favorite) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.outline
+                            },
+                        )
+                    }
+                    IconButton(onClick = {
+                        encoded = initial
+                        saved = false
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
                             contentDescription = stringResource(R.string.calc_reset),
@@ -235,6 +356,22 @@ fun CalculatorDetailScreen(
             ResultPanel(
                 hasInputErrors = inputErrors.isNotEmpty(),
                 computed = computed,
+                actions = if (result != null) {
+                    {
+                        CalculatorActions(
+                            result = result,
+                            saved = saved,
+                            onSave = { showSave = true },
+                            links = calculator.links,
+                            onOpenLink = { link ->
+                                val prefill = calculator.transfer(link, values, result)
+                                onOpenCalculator(link.targetId, prefill)
+                            },
+                        )
+                    }
+                } else {
+                    null
+                },
             )
         },
     ) { padding ->
@@ -287,6 +424,7 @@ fun CalculatorDetailScreen(
                                     ImeAction.Next
                                 },
                                 onValueChange = { text ->
+                                    saved = false
                                     encoded = encodeValues(values + (field.key to text))
                                 },
                             )
@@ -296,6 +434,145 @@ fun CalculatorDetailScreen(
             }
             item(key = "details") {
                 CalculatorDetails(calculator)
+            }
+        }
+    }
+    if (showSave && result != null) {
+        SaveCalcSheet(
+            batches = batches,
+            initialBatchId = batch?.batch?.id,
+            onDismiss = { showSave = false },
+            onSave = { batchId, note ->
+                showSave = false
+                saved = true
+                onSaveToBatch(batchId, values, result, note)
+            },
+        )
+    }
+}
+
+@Composable
+private fun CalculatorActions(
+    result: CalcResult,
+    saved: Boolean,
+    onSave: () -> Unit,
+    links: List<CalculatorLink>,
+    onOpenLink: (CalculatorLink) -> Unit,
+) {
+    if (result.outputs.isEmpty()) return
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Button(
+            onClick = onSave,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.calc_save_to_batch))
+        }
+        if (saved) {
+            Text(
+                text = stringResource(R.string.calc_saved_to_batch),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+        links.forEach { link ->
+            OutlinedButton(
+                onClick = { onOpenLink(link) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(link.title)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SaveCalcSheet(
+    batches: List<BatchDetails>,
+    initialBatchId: Long?,
+    onDismiss: () -> Unit,
+    onSave: (Long?, String?) -> Unit,
+) {
+    var selectedId by rememberSaveable(initialBatchId, batches.size) {
+        mutableStateOf(
+            initialBatchId ?: batches
+                .firstOrNull { it.batch.status == BatchStatus.Active }
+                ?.batch?.id,
+        )
+    }
+    var note by rememberSaveable { mutableStateOf("") }
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.calc_save_sheet_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            if (batches.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.calc_save_no_batches),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    batches.forEach { details ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = selectedId == details.batch.id,
+                                onClick = { selectedId = details.batch.id },
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = details.batch.title,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                Text(
+                                    text = listOf(
+                                        kindLabel(details.batch.kind),
+                                        statusLabel(details.batch.status),
+                                    ).joinToString(" · "),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = note,
+                    onValueChange = { note = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.calc_save_note)) },
+                    minLines = 2,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.dialog_cancel))
+                    }
+                    Button(
+                        onClick = { onSave(selectedId, note.takeIf { it.isNotBlank() }) },
+                        enabled = selectedId != null,
+                    ) {
+                        Text(stringResource(R.string.dialog_save))
+                    }
+                }
             }
         }
     }
@@ -415,6 +692,7 @@ private fun CalculatorInput(
 private fun ResultPanel(
     hasInputErrors: Boolean,
     computed: Result<CalcResult>?,
+    actions: (@Composable () -> Unit)? = null,
 ) {
     val failed = hasInputErrors || computed?.isFailure == true
     val container = if (failed) {
@@ -521,17 +799,21 @@ private fun ResultPanel(
                     )
                 }
             }
+            if (actions != null) {
+                HorizontalDivider(color = content.copy(alpha = 0.16f))
+                actions()
+            }
         }
     }
 }
 
 private fun CalcOutput.display(): String {
     val formatted = String.format(Locale.ROOT, "%.${decimals}f", value)
-    val number = formatted
-        .trimEnd('0')
-        .trimEnd('.')
-        .replace('.', ',')
-        .ifBlank { "0" }
+    val number = if ('.' in formatted) {
+        formatted.trimEnd('0').trimEnd('.')
+    } else {
+        formatted
+    }.replace('.', ',').ifBlank { "0" }
     return "$number $unit"
 }
 

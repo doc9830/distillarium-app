@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -58,13 +60,17 @@ import ru.distillarium.batches.BatchStep
 import ru.distillarium.batches.DateText
 import ru.distillarium.batches.JournalKind
 import ru.distillarium.batches.Measurement
+import ru.distillarium.batches.SavedCalc
+import ru.distillarium.calculators.Calculators
 
 @Composable
 fun BatchDetailScreen(
     state: BatchesUiState,
     batchId: Long,
+    favorites: Set<String>,
     onBack: () -> Unit,
     onOpenArticle: (String) -> Unit,
+    onOpenCalculator: (String, Map<String, String>) -> Unit,
     onCompleteStep: (BatchStep, Boolean) -> Unit,
     onAddStep: (String, Int) -> Unit,
     onAddMeasurement: (Double, Double?, String?) -> Unit,
@@ -72,13 +78,16 @@ fun BatchDetailScreen(
     onSaveNotes: (String?) -> Unit,
     onSetStatus: (BatchStatus) -> Unit,
     onRepeat: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     BackHandler(onBack = onBack)
     val details = state.selected?.takeIf { it.batch.id == batchId }
     var showMenu by rememberSaveable { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
     var addStep by rememberSaveable { mutableStateOf(false) }
     var addMeasurement by rememberSaveable { mutableStateOf(false) }
     var addJournal by rememberSaveable { mutableStateOf(false) }
+    var pickCalculator by rememberSaveable { mutableStateOf(false) }
     val now = System.currentTimeMillis()
 
     Scaffold(
@@ -111,6 +120,10 @@ fun BatchDetailScreen(
                                 onRepeat = {
                                     showMenu = false
                                     onRepeat()
+                                },
+                                onDelete = {
+                                    showMenu = false
+                                    confirmDelete = true
                                 },
                             )
                         }
@@ -158,10 +171,14 @@ fun BatchDetailScreen(
                     now = now,
                     error = state.error,
                     onOpenArticle = onOpenArticle,
+                    onOpenCalculator = { calcId, inputs ->
+                        onOpenCalculator(calcId, inputs)
+                    },
                     onCompleteStep = onCompleteStep,
                     onAddStep = { addStep = true },
                     onAddMeasurement = { addMeasurement = true },
                     onAddJournal = { addJournal = true },
+                    onPickCalculator = { pickCalculator = true },
                     onSaveNotes = onSaveNotes,
                     onRepeat = onRepeat,
                     padding = padding,
@@ -196,6 +213,26 @@ fun BatchDetailScreen(
             },
         )
     }
+    if (pickCalculator) {
+        CalculatorPickerDialog(
+            favorites = favorites,
+            onDismiss = { pickCalculator = false },
+            onSelect = { calculatorId ->
+                pickCalculator = false
+                onOpenCalculator(calculatorId, emptyMap())
+            },
+        )
+    }
+    if (confirmDelete && details != null) {
+        DeleteBatchDialog(
+            title = details.batch.title,
+            onDismiss = { confirmDelete = false },
+            onConfirm = {
+                confirmDelete = false
+                onDelete()
+            },
+        )
+    }
 }
 
 
@@ -206,10 +243,12 @@ private fun BatchContent(
     error: String?,
     padding: PaddingValues,
     onOpenArticle: (String) -> Unit,
+    onOpenCalculator: (String, Map<String, String>) -> Unit,
     onCompleteStep: (BatchStep, Boolean) -> Unit,
     onAddStep: () -> Unit,
     onAddMeasurement: () -> Unit,
     onAddJournal: () -> Unit,
+    onPickCalculator: () -> Unit,
     onSaveNotes: (String?) -> Unit,
     onRepeat: () -> Unit,
 ) {
@@ -331,6 +370,31 @@ private fun BatchContent(
             }
         }
 
+        item(key = "calcs-title") {
+            SectionHeader(
+                title = stringResource(R.string.batch_detail_calcs),
+                actionLabel = stringResource(R.string.batch_detail_add_calc),
+                onAction = onPickCalculator,
+            )
+        }
+        if (details.savedCalcs.isEmpty()) {
+            item(key = "calcs-empty") {
+                EmptyBlock(
+                    title = stringResource(R.string.batch_detail_calcs),
+                    text = stringResource(R.string.batch_detail_calcs_empty),
+                    actionLabel = stringResource(R.string.batch_detail_add_calc),
+                    onAction = onPickCalculator,
+                )
+            }
+        } else {
+            items(details.savedCalcs, key = { "calc-${it.id}" }) { saved ->
+                SavedCalcRow(
+                    saved = saved,
+                    onClick = { onOpenCalculator(saved.calcId, saved.inputs) },
+                )
+            }
+        }
+
         item(key = "notes") {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -385,6 +449,7 @@ private fun BatchMenu(
     onDismiss: () -> Unit,
     onStatus: (BatchStatus) -> Unit,
     onRepeat: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         when (status) {
@@ -419,6 +484,16 @@ private fun BatchMenu(
         DropdownMenuItem(
             text = { Text(stringResource(R.string.batch_detail_repeat)) },
             onClick = onRepeat,
+        )
+        HorizontalDivider()
+        DropdownMenuItem(
+            text = {
+                Text(
+                    text = stringResource(R.string.batch_delete),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            },
+            onClick = onDelete,
         )
     }
 }
@@ -788,4 +863,108 @@ private fun JournalRow(entry: ru.distillarium.batches.JournalEntry) {
             Text(text = entry.text, style = MaterialTheme.typography.bodyMedium)
         }
     }
+}
+
+@Composable
+private fun SavedCalcRow(saved: SavedCalc, onClick: () -> Unit) {
+    val calculator = Calculators.byId(saved.calcId)
+    val first = saved.result?.outputs?.firstOrNull()
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = calculator?.title ?: saved.calcId,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    text = DateText.dateTime(saved.at),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Text(
+                text = if (first != null) {
+                    "${first.label}: ${formatDecimal(first.value, first.decimals)} ${first.unit}"
+                } else {
+                    stringResource(R.string.batch_calc_no_result)
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            saved.note?.let { note ->
+                Text(
+                    text = note,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalculatorPickerDialog(
+    favorites: Set<String>,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.batch_detail_pick_calc)) },
+        text = {
+            LazyColumn(
+                modifier = Modifier.heightIn(max = 420.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Calculators.groups.forEach { group ->
+                    val items = Calculators.all
+                        .filter { it.group == group }
+                        .sortedWith(compareBy({ it.id !in favorites }, { it.title }))
+                    if (items.isEmpty()) return@forEach
+                    item(key = "pick-${group.name}") {
+                        Text(
+                            text = group.title.uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                        )
+                    }
+                    items(items, key = { "pick-${it.id}" }) { calculator ->
+                        TextButton(
+                            onClick = { onSelect(calculator.id) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = if (calculator.id in favorites) {
+                                    "★ ${calculator.title}"
+                                } else {
+                                    calculator.title
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.dialog_cancel))
+            }
+        },
+    )
 }

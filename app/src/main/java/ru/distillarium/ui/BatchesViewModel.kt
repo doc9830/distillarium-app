@@ -15,6 +15,8 @@ import ru.distillarium.batches.BatchKind
 import ru.distillarium.batches.BatchRules
 import ru.distillarium.batches.BatchStatus
 import ru.distillarium.batches.JournalKind
+import ru.distillarium.calculators.CalcResult
+import ru.distillarium.calculators.Calculator
 import ru.distillarium.recipes.RecipeTemplate
 
 data class BatchesUiState(
@@ -23,6 +25,7 @@ data class BatchesUiState(
     val cards: List<BatchDetails> = emptyList(),
     val recipes: List<RecipeTemplate> = emptyList(),
     val recipesError: String? = null,
+    val calcFavorites: Set<String> = emptySet(),
     val selectedId: Long? = null,
     val selected: BatchDetails? = null,
     val detailLoading: Boolean = false,
@@ -38,6 +41,7 @@ class BatchesViewModel(application: Application) : AndroidViewModel(application)
     init {
         refresh()
         refreshRecipes()
+        viewModelScope.launch { refreshCalcFavorites() }
     }
 
     fun refresh() {
@@ -156,11 +160,65 @@ class BatchesViewModel(application: Application) : AndroidViewModel(application)
     fun addJournal(batchId: Long, kind: JournalKind, text: String) =
         mutate { repository.addJournal(batchId, kind, text) }
 
+    fun saveCalc(
+        batchId: Long?,
+        calculator: Calculator,
+        inputs: Map<String, String>,
+        result: CalcResult,
+        note: String?,
+    ) = mutate { repository.saveCalc(batchId, calculator, inputs, result, note) }
+
+    fun toggleCalcFavorite(calculator: Calculator) {
+        val favorite = calculator.id !in _state.value.calcFavorites
+        viewModelScope.launch {
+            try {
+                repository.setCalcFavorite(calculator, favorite)
+                refreshCalcFavorites()
+            } catch (error: Exception) {
+                Log.e(TAG, "Не удалось изменить избранное", error)
+                _state.update { it.copy(error = userMessage(error)) }
+            }
+        }
+    }
+
+    private suspend fun refreshCalcFavorites() {
+        try {
+            val favorites = repository.calcFavorites()
+            _state.update { it.copy(calcFavorites = favorites) }
+        } catch (error: Exception) {
+            Log.e(TAG, "Не удалось прочитать избранное", error)
+        }
+    }
+
     fun setStatus(batchId: Long, status: BatchStatus) =
         mutate { repository.setStatus(batchId, status) }
 
     fun updateNotes(batchId: Long, notes: String?) =
         mutate { repository.updateNotes(batchId, notes) }
+
+    fun deleteBatch(batchId: Long, onDeleted: () -> Unit = {}) {
+        if (_state.value.busy) return
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true, error = null) }
+            try {
+                repository.delete(batchId)
+                _state.update { current ->
+                    if (current.selectedId == batchId) {
+                        current.copy(selectedId = null, selected = null)
+                    } else {
+                        current
+                    }
+                }
+                reloadAll()
+                onDeleted()
+            } catch (error: Exception) {
+                Log.e(TAG, "Не удалось удалить партию", error)
+                _state.update { it.copy(error = userMessage(error)) }
+            } finally {
+                _state.update { it.copy(busy = false) }
+            }
+        }
+    }
 
     fun repeatBatch(batchId: Long, onCreated: (Long) -> Unit) {
         if (_state.value.busy) return

@@ -82,6 +82,7 @@ class UserDatabase(context: Context) :
                 calc_id TEXT NOT NULL,
                 inputs_json TEXT NOT NULL,
                 result_json TEXT,
+                note TEXT,
                 at INTEGER NOT NULL
             )
             """.trimIndent(),
@@ -95,14 +96,36 @@ class UserDatabase(context: Context) :
             )
             """.trimIndent(),
         )
+        db.execSQL(
+            """
+            CREATE TABLE calc_favorites (
+                calc_id TEXT PRIMARY KEY,
+                saved_at INTEGER NOT NULL,
+                title_at_save TEXT NOT NULL
+            )
+            """.trimIndent(),
+        )
         db.execSQL("CREATE INDEX idx_steps_batch ON batch_steps(batch_id, position)")
         db.execSQL("CREATE INDEX idx_steps_due ON batch_steps(done_at, due_at)")
         db.execSQL("CREATE INDEX idx_measurements_batch ON measurements(batch_id, at)")
         db.execSQL("CREATE INDEX idx_journal_batch ON journal(batch_id, at)")
+        db.execSQL("CREATE INDEX idx_calcs_batch ON calcs_saved(batch_id, at)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Первая версия схемы. Здесь появятся миграции с сохранением данных.
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE calcs_saved ADD COLUMN note TEXT")
+            db.execSQL(
+                """
+                CREATE TABLE calc_favorites (
+                    calc_id TEXT PRIMARY KEY,
+                    saved_at INTEGER NOT NULL,
+                    title_at_save TEXT NOT NULL
+                )
+                """.trimIndent(),
+            )
+            db.execSQL("CREATE INDEX idx_calcs_batch ON calcs_saved(batch_id, at)")
+        }
     }
 
     fun insertBatch(batch: Batch, steps: List<BatchStep>): Long {
@@ -208,6 +231,120 @@ class UserDatabase(context: Context) :
             put("photo_uri", entry.photoUri)
         },
     )
+
+    /**
+     * Сохраняет расчёт и, если он привязан к партии, запись в её журнал.
+     * Обе строки появляются вместе: история партии не должна расходиться с расчётами.
+     */
+    fun saveCalc(
+        batchId: Long?,
+        calcId: String,
+        inputsJson: String,
+        resultJson: String?,
+        note: String?,
+        journalText: String?,
+        at: Long,
+    ): Long {
+        val db = writableDatabase
+        db.beginTransaction()
+        return try {
+            val id = db.insertOrThrow(
+                "calcs_saved",
+                null,
+                ContentValues().apply {
+                    put("batch_id", batchId)
+                    put("calc_id", calcId)
+                    put("inputs_json", inputsJson)
+                    put("result_json", resultJson)
+                    put("note", note)
+                    put("at", at)
+                },
+            )
+            if (batchId != null && !journalText.isNullOrBlank()) {
+                db.insertOrThrow(
+                    "journal",
+                    null,
+                    ContentValues().apply {
+                        put("batch_id", batchId)
+                        put("at", at)
+                        put("kind", JournalKind.Calculation.storage)
+                        put("text", journalText)
+                    },
+                )
+                db.update(
+                    "batches",
+                    ContentValues().apply { put("updated_at", at) },
+                    "id = ?",
+                    arrayOf(batchId.toString()),
+                )
+            }
+            db.setTransactionSuccessful()
+            id
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    fun savedCalcs(batchId: Long): List<SavedCalc> = readableDatabase.query(
+        "calcs_saved",
+        null,
+        "batch_id = ?",
+        arrayOf(batchId.toString()),
+        null,
+        null,
+        "at DESC, id DESC",
+    ).use { cursor ->
+        buildList { while (cursor.moveToNext()) add(cursor.toSavedCalc()) }
+    }
+
+    fun calcFavorites(): Set<String> = readableDatabase.query(
+        "calc_favorites",
+        arrayOf("calc_id"),
+        null,
+        null,
+        null,
+        null,
+        "saved_at DESC",
+    ).use { cursor ->
+        buildSet {
+            while (cursor.moveToNext()) add(cursor.getString(cursor.getColumnIndexOrThrow("calc_id")))
+        }
+    }
+
+    fun setCalcFavorite(calcId: String, title: String, favorite: Boolean, at: Long) {
+        if (favorite) {
+            writableDatabase.insertWithOnConflict(
+                "calc_favorites",
+                null,
+                ContentValues().apply {
+                    put("calc_id", calcId)
+                    put("saved_at", at)
+                    put("title_at_save", title)
+                },
+                SQLiteDatabase.CONFLICT_REPLACE,
+            )
+        } else {
+            writableDatabase.delete(
+                "calc_favorites",
+                "calc_id = ?",
+                arrayOf(calcId),
+            )
+        }
+    }
+
+    fun deleteBatch(batchId: Long): Boolean {
+        val db = writableDatabase
+        db.beginTransaction()
+        return try {
+            // В calcs_saved нет внешнего ключа: удаляем снимки вручную.
+            db.delete("calcs_saved", "batch_id = ?", arrayOf(batchId.toString()))
+            val deleted = db.delete("batches", "id = ?", arrayOf(batchId.toString())) > 0
+            db.setTransactionSuccessful()
+            deleted
+        } finally {
+            db.endTransaction()
+        }
+    }
 
     fun batches(): List<Batch> = readableDatabase.query(
         "batches",
@@ -385,6 +522,16 @@ class UserDatabase(context: Context) :
         photoUri = getStringOrNull("photo_uri"),
     )
 
+    private fun Cursor.toSavedCalc(): SavedCalc = SavedCalc(
+        id = getLong(getColumnIndexOrThrow("id")),
+        batchId = getLongOrNull("batch_id"),
+        calcId = getString(getColumnIndexOrThrow("calc_id")),
+        inputs = SavedCalcCodec.decodeInputs(getString(getColumnIndexOrThrow("inputs_json"))),
+        result = SavedCalcCodec.decodeResult(getStringOrNull("result_json")),
+        note = getStringOrNull("note"),
+        at = getLong(getColumnIndexOrThrow("at")),
+    )
+
     private fun Cursor.getStringOrNull(column: String): String? {
         val index = getColumnIndexOrThrow(column)
         return if (isNull(index)) null else getString(index)
@@ -402,7 +549,7 @@ class UserDatabase(context: Context) :
 
     private companion object {
         const val NAME = "user.db"
-        const val VERSION = 1
+        const val VERSION = 2
     }
 }
 

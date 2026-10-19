@@ -1,5 +1,6 @@
 package ru.distillarium.ui
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -98,9 +98,33 @@ fun DistillariumRoot(
         pushRoute(batchRoute(batchId))
     }
 
+    fun openCalculator(
+        calculatorId: String,
+        batchId: Long? = null,
+        prefill: Map<String, String> = emptyMap(),
+    ) {
+        pushRoute(calculatorRoute(calculatorId, batchId, prefill))
+    }
+
     fun openNewBatch() {
         tabName = RootTab.Batches.name
         pushRoute(NEW_BATCH_ROUTE)
+    }
+
+    fun openKnowledge() {
+        routeStack = ""
+        tabName = RootTab.Knowledge.name
+    }
+
+    fun openCalculators() {
+        routeStack = ""
+        tabName = RootTab.Calculators.name
+    }
+
+    fun deleteBatch(batchId: Long) {
+        batchesViewModel.deleteBatch(batchId) {
+            if (currentRoute?.startsWith(BATCH_ROUTE) == true) closeRoute()
+        }
     }
 
     LaunchedEffect(tab, updates.installedVersion) {
@@ -115,7 +139,7 @@ fun DistillariumRoot(
     }
 
     if (currentRoute != null) {
-        val target = currentRoute.substringAfter(':')
+        val target = currentRoute.substringAfter(':').substringBefore('?')
         when {
             currentRoute.startsWith(NEW_BATCH_ROUTE) -> {
                 NewBatchScreen(
@@ -141,11 +165,15 @@ fun DistillariumRoot(
                     BatchDetailScreen(
                         state = batches,
                         batchId = batchId,
+                        favorites = batches.calcFavorites,
                         onBack = {
                             batchesViewModel.closeBatch()
                             closeRoute()
                         },
                         onOpenArticle = { id -> pushRoute(articleRoute(id)) },
+                        onOpenCalculator = { calcId, prefill ->
+                            openCalculator(calcId, batchId, prefill)
+                        },
                         onCompleteStep = { step, done ->
                             batchesViewModel.completeStep(step.id, batchId, done)
                         },
@@ -165,6 +193,7 @@ fun DistillariumRoot(
                                 routeStack = batchRoute(newId)
                             }
                         },
+                        onDelete = { deleteBatch(batchId) },
                     )
                 }
             }
@@ -211,13 +240,29 @@ fun DistillariumRoot(
                 }
             }
             currentRoute.startsWith(CALCULATOR_ROUTE) -> {
-                val calculator = Calculators.byId(target)
+                val args = calculatorRouteArgs(currentRoute)
+                val calculator = args.id?.let(Calculators::byId)
                 if (calculator == null) {
                     MissingCalculatorScreen(onBack = ::closeRoute)
                 } else {
+                    val batch = args.batchId?.let { id ->
+                        batches.cards.firstOrNull { it.batch.id == id }
+                            ?: batches.selected?.takeIf { it.batch.id == id }
+                    }
                     CalculatorDetailScreen(
                         calculator = calculator,
+                        initialValues = args.prefill,
+                        batch = batch,
+                        batches = batches.cards,
+                        favorite = calculator.id in batches.calcFavorites,
+                        onToggleFavorite = { batchesViewModel.toggleCalcFavorite(calculator) },
                         onBack = ::closeRoute,
+                        onOpenCalculator = { id, prefill ->
+                            openCalculator(id, args.batchId, prefill)
+                        },
+                        onSaveToBatch = { batchId, inputs, result, note ->
+                            batchesViewModel.saveCalc(batchId, calculator, inputs, result, note)
+                        },
                     )
                 }
             }
@@ -253,30 +298,6 @@ fun DistillariumRoot(
                     )
 
                     NavigationBarItem(
-                        selected = tab == RootTab.Knowledge,
-                        onClick = { tabName = RootTab.Knowledge.name },
-                        icon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_calc_menu_book),
-                                contentDescription = null,
-                            )
-                        },
-                        label = { Text(stringResource(R.string.nav_knowledge)) },
-                        colors = navigationBarColors(),
-                    )
-                    NavigationBarItem(
-                        selected = tab == RootTab.Calculators,
-                        onClick = { tabName = RootTab.Calculators.name },
-                        icon = {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_calc_calculate),
-                                contentDescription = null,
-                            )
-                        },
-                        label = { Text(stringResource(R.string.nav_calculators)) },
-                        colors = navigationBarColors(),
-                    )
-                    NavigationBarItem(
                         selected = tab == RootTab.Updates,
                         onClick = { tabName = RootTab.Updates.name },
                         icon = { Icon(Icons.Filled.Refresh, contentDescription = null) },
@@ -301,11 +322,14 @@ fun DistillariumRoot(
                         batchesViewModel.completeStep(step.id, step.batchId, true)
                     },
                     onRetry = batchesViewModel::refresh,
+                    onOpenKnowledge = ::openKnowledge,
+                    onOpenCalculators = ::openCalculators,
                 )
                 RootTab.Batches -> BatchesScreen(
                     state = batches,
                     onOpenBatch = ::openBatch,
                     onNewBatch = ::openNewBatch,
+                    onDeleteBatch = ::deleteBatch,
                 )
                 RootTab.Knowledge -> KnowledgeScreen(
                     state = knowledge,
@@ -320,7 +344,9 @@ fun DistillariumRoot(
                     onRetry = knowledgeViewModel::retry,
                 )
                 RootTab.Calculators -> CalculatorsScreen(
-                    onOpenCalculator = { id -> pushRoute(calculatorRoute(id)) },
+                    onOpenCalculator = { id -> openCalculator(id) },
+                    favorites = batches.calcFavorites,
+                    onToggleFavorite = batchesViewModel::toggleCalcFavorite,
                 )
                 RootTab.Updates -> UpdatesScreen(
                     state = updates,
@@ -348,8 +374,56 @@ private const val CALCULATOR_ROUTE = "c:"
 private const val BATCH_ROUTE = "b:"
 private const val NEW_BATCH_ROUTE = "n:"
 
+private data class CalculatorRouteArgs(
+    val id: String?,
+    val batchId: Long?,
+    val prefill: Map<String, String>,
+)
+
 private fun articleRoute(id: String): String = ARTICLES_ROUTE + id
 private fun referenceRoute(id: String): String = REFERENCE_ROUTE + id
-private fun calculatorRoute(id: String): String = CALCULATOR_ROUTE + id
+private fun calculatorRoute(
+    id: String,
+    batchId: Long? = null,
+    prefill: Map<String, String> = emptyMap(),
+): String {
+    val params = buildList {
+        if (batchId != null) add("b=$batchId")
+        if (prefill.isNotEmpty()) {
+            val encoded = prefill.entries.joinToString("\n") { (key, value) -> "$key=$value" }
+            add("v=${Uri.encode(encoded)}")
+        }
+    }
+    val suffix = if (params.isEmpty()) "" else "?" + params.joinToString("&")
+    return CALCULATOR_ROUTE + Uri.encode(id) + suffix
+}
+
+private fun calculatorRouteArgs(route: String): CalculatorRouteArgs {
+    val id = route.substringAfter(':').substringBefore('?').let(Uri::decode)
+    val query = route.substringAfter('?', "")
+    val params = query
+        .split('&')
+        .filter { '=' in it }
+        .associate { part ->
+            Uri.decode(part.substringBefore('=')) to Uri.decode(part.substringAfter('='))
+        }
+    val prefill = params["v"]?.lineSequence()
+        ?.mapNotNull { line ->
+            val separator = line.indexOf('=')
+            if (separator <= 0) {
+                null
+            } else {
+                line.take(separator) to line.drop(separator + 1)
+            }
+        }
+        ?.toMap()
+        .orEmpty()
+    return CalculatorRouteArgs(
+        id = id.takeIf { it.isNotBlank() },
+        batchId = params["b"]?.toLongOrNull(),
+        prefill = prefill,
+    )
+}
+
 private fun batchRoute(id: Long): String = BATCH_ROUTE + id
 

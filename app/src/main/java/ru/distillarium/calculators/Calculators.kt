@@ -60,6 +60,44 @@ data class CalcResult(
     val note: String? = null,
 )
 
+/** Откуда взять число при передаче результата в следующий калькулятор. */
+sealed interface CalcLinkValue {
+    data class Input(val key: String) : CalcLinkValue
+    data class Output(val index: Int) : CalcLinkValue
+}
+
+/** Естественное продолжение расчёта: «Разбавил — теперь перегони». */
+data class CalculatorLink(
+    val targetId: String,
+    val title: String,
+    val values: Map<String, CalcLinkValue>,
+)
+
+/** Значения партии, которые калькулятор умеет подставлять в свои поля. */
+enum class BatchValue {
+    Volume,
+    InitialGravity,
+    LatestGravity,
+    LatestTemperature,
+    CalculatedAbv,
+}
+
+data class CalculatorBatchContext(
+    val volume: Double? = null,
+    val initialGravity: Double? = null,
+    val latestGravity: Double? = null,
+    val latestTemperature: Double? = null,
+    val calculatedAbv: Double? = null,
+) {
+    fun value(kind: BatchValue): Double? = when (kind) {
+        BatchValue.Volume -> volume
+        BatchValue.InitialGravity -> initialGravity
+        BatchValue.LatestGravity -> latestGravity
+        BatchValue.LatestTemperature -> latestTemperature
+        BatchValue.CalculatedAbv -> calculatedAbv
+    }
+}
+
 class CalculatorException(message: String) : IllegalArgumentException(message)
 
 data class Calculator(
@@ -70,6 +108,8 @@ data class Calculator(
     val fields: List<CalculatorField>,
     val source: String? = null,
     val note: String? = null,
+    val links: List<CalculatorLink> = emptyList(),
+    val batchFields: Map<String, BatchValue> = emptyMap(),
     val compute: (Map<String, Double>) -> CalcResult,
 ) {
     fun calculate(values: Map<String, Double>): CalcResult = compute(values)
@@ -81,6 +121,28 @@ data class Calculator(
     fun inputErrors(values: Map<String, String>): Map<String, String> = fields
         .mapNotNull { field -> field.error(values[field.key].orEmpty())?.let { field.key to it } }
         .toMap()
+
+    /** Подставляет значения из партии только в те поля, для которых это осмысленно. */
+    fun prefillFrom(context: CalculatorBatchContext): Map<String, String> =
+        batchFields.mapNotNull { (key, kind) ->
+            context.value(kind)?.let { key to CalculatorField.number(it) }
+        }.toMap()
+
+    /** Переносит значения из текущего результата в поля целевого калькулятора. */
+    fun transfer(link: CalculatorLink, values: Map<String, String>, result: CalcResult): Map<String, String> {
+        val target = requireNotNull(Calculators.byId(link.targetId)) {
+            "Нет калькулятора ${link.targetId}"
+        }
+        return link.values.mapNotNull { (key, source) ->
+            if (target.fields.none { it.key == key }) return@mapNotNull null
+            when (source) {
+                is CalcLinkValue.Input -> values[source.key]?.trim()?.takeIf { it.isNotEmpty() }
+                is CalcLinkValue.Output -> result.outputs.getOrNull(source.index)?.let { output ->
+                    CalculatorField.number(output.value)
+                }
+            }?.let { key to it }
+        }.toMap()
+    }
 }
 
 
@@ -300,6 +362,13 @@ object Calculators {
         source = "Спирт = сахар × 0,6 л/кг; объём = вода + сахар × 0,62 л/кг",
         note = "0,6 л абсолютного спирта на 1 кг сахара — практический выход. " +
             "Теоретический максимум около 0,68 л/кг, остальное теряется в брожении и перегонке.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "heater",
+                title = "Рассчитать нагрев",
+                values = mapOf("volume" to CalcLinkValue.Output(1)),
+            ),
+        ),
         compute = { values ->
             val sugar = values.getValue("sugar")
             val water = values.getValue("water")
@@ -337,6 +406,13 @@ object Calculators {
         ),
         source = "Сахар = сок × сахаристость + добавка; спирт = сахар × 0,6",
         note = "Сахаристость сока — ориентир. Кислотность и дрожжи подбирайте отдельно.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "heater",
+                title = "Рассчитать нагрев",
+                values = mapOf("volume" to CalcLinkValue.Output(1)),
+            ),
+        ),
         compute = { values ->
             val juice = values.getValue("juice")
             val naturalSugar = values.getValue("naturalSugar")
@@ -371,6 +447,13 @@ object Calculators {
         source = "Сахар = зерно × крахмал × 1,11 × 0,75; спирт = сахар × 0,6",
         note = "Учтены перевод крахмала в глюкозу (1,11) и потери осахаривания 25 %. " +
             "Для кукурузы, пшеницы и ячменя значения близки, но выход зависит от помола и ферментов.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "heater",
+                title = "Рассчитать нагрев",
+                values = mapOf("volume" to CalcLinkValue.Output(2)),
+            ),
+        ),
         compute = { values ->
             val grain = values.getValue("grain")
             val starch = values.getValue("starch")
@@ -403,6 +486,7 @@ object Calculators {
         source = "Сахар = крепость × объём × 0,017 кг/(л·% об.)",
         note = "17 г сахара на 1 л на 1 % об. — практическая оценка для винных дрожжей. " +
             "Если сахара уже достаточно, добавка будет нулевой.",
+        batchFields = mapOf("volume" to BatchValue.Volume),
         compute = { values ->
             val volume = values.getValue("volume")
             val brix = values.getValue("brix")
@@ -444,6 +528,10 @@ object Calculators {
         ),
         source = "ABV = (OG − FG) × 131,25; сбраживание = (OG − FG) / (OG − 1)",
         note = "Для пива и вина это хорошая оценка. Для крепкого дистиллята измеряйте крепость спиртометром.",
+        batchFields = mapOf(
+            "og" to BatchValue.InitialGravity,
+            "fg" to BatchValue.LatestGravity,
+        ),
         compute = { values ->
             val og = values.getValue("og")
             val fg = values.getValue("fg")
@@ -476,6 +564,19 @@ object Calculators {
         source = "АС = V × C; головы и хвосты — заданные доли АС; тело — остаток",
         note = "Головы и хвосты пересчитаны в объём при крепости сырца, тело — при заданной крепости. " +
             "Доли — ориентир, а не команда: фракции проверяйте по запаху и спиртометру.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "takeoff-rate",
+                title = "Считать скорость отбора",
+                values = mapOf("total" to CalcLinkValue.Output(2)),
+            ),
+            CalculatorLink(
+                targetId = "reflux-ratio",
+                title = "Оценить флегмовое число",
+                values = mapOf("strength" to CalcLinkValue.Input("bodyStrength")),
+            ),
+        ),
+        batchFields = mapOf("volume" to BatchValue.Volume),
         compute = { values ->
             val volume = values.getValue("volume")
             val strength = values.getValue("strength")
@@ -513,6 +614,13 @@ object Calculators {
         ),
         source = "Q = V × 3600 / t; время = общий объём / Q",
         note = "Замеряйте несколько минут, а не одну каплю: так меньше ошибка реакции и секундомера.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "reflux-ratio",
+                title = "Оценить флегмовое число",
+                values = mapOf("takeoff" to CalcLinkValue.Output(0)),
+            ),
+        ),
         compute = { values ->
             val measured = values.getValue("measured")
             val seconds = values.getValue("seconds")
@@ -627,6 +735,14 @@ object Calculators {
         ),
         source = "SG испр. = SG + 0,00025 × (T − Tкалибр.)",
         note = "Линейная поправка для бытовых измерений. Для точных работ используйте паспортную таблицу ареометра.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "gravity-convert",
+                title = "Перевести в Brix и Plato",
+                values = mapOf("sg" to CalcLinkValue.Output(0)),
+            ),
+        ),
+        batchFields = mapOf("temperature" to BatchValue.LatestTemperature),
         compute = { values ->
             val reading = values.getValue("reading")
             val temperature = values.getValue("temperature")
@@ -653,6 +769,7 @@ object Calculators {
         ),
         source = "ABV₂₀ ≈ ABV + 0,35 × (T − 20 °C)",
         note = "Коэффициент 0,35 %/°C — практическое приближение. Для юридических измерений нужна поверенная таблица.",
+        batchFields = mapOf("temperature" to BatchValue.LatestTemperature),
         compute = { values ->
             val reading = values.getValue("reading")
             val temperature = values.getValue("temperature")
@@ -677,6 +794,13 @@ object Calculators {
         ),
         source = "SG = 1 + Brix / (258,6 − Brix / 258,2 × 227,1); Plato — полином по SG",
         note = "Brix и Plato близки, но не равны. Для растворов с алкоголем нужна отдельная поправка.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "sugar-addition",
+                title = "Добавить сахар в сусло",
+                values = mapOf("brix" to CalcLinkValue.Input("brix")),
+            ),
+        ),
         compute = { values ->
             val brix = values.getValue("brix")
             val sg = CalcMath.sgFromBrix(brix)
@@ -723,6 +847,16 @@ object Calculators {
         ),
         source = "V = (масса брутто − тара) / плотность(крепость)",
         note = "Плотность берётся при 20 °C. Взвешивание на бытовых весах даёт погрешность около 10–20 мл.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "dilution",
+                title = "Разбавить этот продукт",
+                values = mapOf(
+                    "volume" to CalcLinkValue.Output(1),
+                    "strength" to CalcLinkValue.Input("strength"),
+                ),
+            ),
+        ),
         compute = { values ->
             val gross = values.getValue("gross")
             val tare = values.getValue("tare")
@@ -755,6 +889,7 @@ object Calculators {
         ),
         source = "Tinseth: IBU = α × масса × 1000 × утилизация / объём",
         note = "Модель Tinseth даёт оценку. Реальная горечь зависит от сорта хмеля, гранул и интенсивности кипения.",
+        batchFields = mapOf("volume" to BatchValue.Volume),
         compute = { values ->
             val og = values.getValue("og")
             val volume = values.getValue("volume")
@@ -786,6 +921,17 @@ object Calculators {
         source = "Массовый баланс этанола: m(вода) = m(этанол) / w(цель) − m(раствор)",
         note = "Учитывается контракция: объём смеси меньше суммы объёмов спирта и воды. " +
             "После смешивания измерьте крепость при 20 °C.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "heads-tails",
+                title = "Перегнать это",
+                values = mapOf(
+                    "volume" to CalcLinkValue.Output(1),
+                    "strength" to CalcLinkValue.Input("target"),
+                ),
+            ),
+        ),
+        batchFields = mapOf("volume" to BatchValue.Volume),
         compute = { values ->
             val volume = values.getValue("volume")
             val strength = values.getValue("strength")
@@ -820,6 +966,17 @@ object Calculators {
         ),
         source = "m(этанол) = V₂ × C₂ × ρэт; V₁ = m(этанол) / (C₁ × ρэт)",
         note = "Считается по массе с учётом плотности и контракции. Итоговый объём точно равен заданному.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "heads-tails",
+                title = "Перегнать это",
+                values = mapOf(
+                    "volume" to CalcLinkValue.Input("volume"),
+                    "strength" to CalcLinkValue.Input("target"),
+                ),
+            ),
+        ),
+        batchFields = mapOf("volume" to BatchValue.Volume),
         compute = { values ->
             val volume = values.getValue("volume")
             val strength = values.getValue("strength")
@@ -854,6 +1011,16 @@ object Calculators {
         ),
         source = "m(вода) = m × w₁ / w₂ − m",
         note = "Массовый баланс этанола. Объём итоговой смеси считается по плотности при 20 °C.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "heads-tails",
+                title = "Перегнать это",
+                values = mapOf(
+                    "volume" to CalcLinkValue.Output(1),
+                    "strength" to CalcLinkValue.Input("target"),
+                ),
+            ),
+        ),
         compute = { values ->
             val mass = values.getValue("mass")
             val strength = values.getValue("strength")
@@ -967,6 +1134,7 @@ object Calculators {
         ),
         source = "ABV = спирт / (спирт + вода + сахар × 0,62)",
         note = "0,62 л/кг — приблизительный объём растворённого сахара. Плотность и контракция не учитываются.",
+        batchFields = mapOf("volume" to BatchValue.Volume),
         compute = { values ->
             val volume = values.getValue("volume")
             val strength = values.getValue("strength")
@@ -997,6 +1165,7 @@ object Calculators {
         ),
         source = "T = (V₁T₁ + V₂T₂) / (V₁ + V₂)",
         note = "Оценка для воды и близких по теплоёмкости жидкостей. Теплопотери в баке не учитываются.",
+        batchFields = mapOf("volume1" to BatchValue.Volume),
         compute = { values ->
             val volume1 = values.getValue("volume1")
             val temperature1 = values.getValue("temperature1")
@@ -1030,6 +1199,17 @@ object Calculators {
         ),
         source = "Солод = (OG − 1) × 1000 × V / (386 × экстрактивность × КПД)",
         note = "386 пунктов·л/кг — экстракт 1 кг сахара в 1 л. Для солода учитываются экстрактивность и потери затирания.",
+        links = listOf(
+            CalculatorLink(
+                targetId = "ibu",
+                title = "Рассчитать горечь",
+                values = mapOf(
+                    "volume" to CalcLinkValue.Input("volume"),
+                    "og" to CalcLinkValue.Input("og"),
+                ),
+            ),
+        ),
+        batchFields = mapOf("volume" to BatchValue.Volume),
         compute = { values ->
             val volume = values.getValue("volume")
             val og = values.getValue("og")
@@ -1109,6 +1289,7 @@ object Calculators {
         ),
         source = "I = P/U; R = U²/P; t = m × c × ΔT / (P × КПД)",
         note = "Для воды c = 4186 Дж/(кг·К), масса 1 л = 1 кг. Потери в баке и на испарение не учитываются.",
+        batchFields = mapOf("volume" to BatchValue.Volume),
         compute = { values ->
             val volume = values.getValue("volume")
             val power = values.getValue("power")

@@ -185,22 +185,15 @@ fun JournalDialog(
                     style = MaterialTheme.typography.labelMedium,
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        JournalKind.entries.take(2).forEach { option ->
-                            FilterChip(
-                                selected = kind == option,
-                                onClick = { kind = option },
-                                label = { Text(journalKindLabel(option)) },
-                            )
-                        }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        JournalKind.entries.drop(2).forEach { option ->
-                            FilterChip(
-                                selected = kind == option,
-                                onClick = { kind = option },
-                                label = { Text(journalKindLabel(option)) },
-                            )
+                    JournalKind.entries.chunked(2).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { option ->
+                                FilterChip(
+                                    selected = kind == option,
+                                    onClick = { kind = option },
+                                    label = { Text(journalKindLabel(option)) },
+                                )
+                            }
                         }
                     }
                 }

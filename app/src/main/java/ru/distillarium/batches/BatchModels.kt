@@ -1,5 +1,7 @@
 package ru.distillarium.batches
 
+import ru.distillarium.calculators.CalcResult
+
 /** Тип продукта. Хранится строкой, чтобы старые версии не ломали чтение. */
 enum class BatchKind(val storage: String) {
     Distillate("distillate"),
@@ -28,7 +30,8 @@ enum class JournalKind(val storage: String) {
     Note("note"),
     Addition("addition"),
     Racking("racking"),
-    Tasting("tasting");
+    Tasting("tasting"),
+    Calculation("calculation");
 
     companion object {
         fun fromStorage(value: String?): JournalKind =
@@ -81,12 +84,28 @@ data class JournalEntry(
     val photoUri: String? = null,
 )
 
+/**
+ * Расчёт, сохранённый пользователем. Поля калькулятора хранятся как введённые
+ * строки, результат — уже посчитанные значения: формула может измениться,
+ * а история останется прежней.
+ */
+data class SavedCalc(
+    val id: Long,
+    val batchId: Long?,
+    val calcId: String,
+    val inputs: Map<String, String>,
+    val result: CalcResult?,
+    val note: String? = null,
+    val at: Long,
+)
+
 /** Полная карточка партии: всё, что нужно списку и экрану деталей. */
 data class BatchDetails(
     val batch: Batch,
     val steps: List<BatchStep>,
     val measurements: List<Measurement>,
     val journal: List<JournalEntry>,
+    val savedCalcs: List<SavedCalc> = emptyList(),
 ) {
     val doneSteps: Int get() = steps.count { it.isDone }
     val totalSteps: Int get() = steps.size

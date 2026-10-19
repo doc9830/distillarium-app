@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -60,6 +62,8 @@ fun NowScreen(
     onNewBatch: () -> Unit,
     onCompleteStep: (BatchStep) -> Unit,
     onRetry: () -> Unit,
+    onOpenKnowledge: () -> Unit,
+    onOpenCalculators: () -> Unit,
 ) {
     val now = System.currentTimeMillis()
     val active = state.cards.filter { it.batch.status == BatchStatus.Active }
@@ -125,6 +129,29 @@ fun NowScreen(
             }
             item(key = "notifications") {
                 NotificationPermissionCard()
+            }
+            item(key = "sections") {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    HomeTile(
+                        title = stringResource(R.string.now_knowledge),
+                        text = stringResource(R.string.now_knowledge_text),
+                        actionLabel = stringResource(R.string.now_open_knowledge),
+                        iconRes = R.drawable.ic_calc_menu_book,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenKnowledge,
+                    )
+                    HomeTile(
+                        title = stringResource(R.string.now_calculators),
+                        text = stringResource(R.string.now_calculators_text),
+                        actionLabel = stringResource(R.string.now_open_calculators),
+                        iconRes = R.drawable.ic_calc_calculate,
+                        modifier = Modifier.weight(1f),
+                        onClick = onOpenCalculators,
+                    )
+                }
             }
             item(key = "tasks-title") {
                 SectionTitle(stringResource(R.string.now_tasks_title))
@@ -192,6 +219,62 @@ fun SectionTitle(text: String) {
         style = MaterialTheme.typography.titleMedium,
         modifier = Modifier.padding(top = 4.dp),
     )
+}
+
+@Composable
+private fun HomeTile(
+    title: String,
+    text: String,
+    actionLabel: String,
+    iconRes: Int,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = actionLabel,
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(24.dp),
+                )
+            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = actionLabel,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
 }
 
 @Composable

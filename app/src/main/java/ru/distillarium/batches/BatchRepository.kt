@@ -2,10 +2,13 @@ package ru.distillarium.batches
 
 import android.content.Context
 import java.time.ZoneId
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import ru.distillarium.calculators.CalcResult
+import ru.distillarium.calculators.Calculator
 import ru.distillarium.recipes.RecipeTemplate
 
 /**
@@ -208,8 +211,73 @@ class BatchRepository(
             }
         }
 
+    suspend fun delete(batchId: Long) = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            database.deleteBatch(batchId)
+        }
+    }
+
+    /**
+     * «Сохранить в партию»: сам расчёт остаётся снимком введённых значений,
+     * а в журнал партии попадает короткая запись с результатом.
+     */
+    suspend fun saveCalc(
+        batchId: Long?,
+        calculator: Calculator,
+        inputs: Map<String, String>,
+        result: CalcResult,
+        note: String?,
+    ): Long = withContext(Dispatchers.IO) {
+        val cleanNote = note?.trim()?.takeIf { it.isNotEmpty() }
+        mutex.withLock {
+            if (batchId != null) {
+                requireNotNull(database.batch(batchId)) { "Партия не найдена" }
+            }
+            database.saveCalc(
+                batchId = batchId,
+                calcId = calculator.id,
+                inputsJson = SavedCalcCodec.encodeInputs(inputs),
+                resultJson = SavedCalcCodec.encodeResult(result),
+                note = cleanNote,
+                journalText = batchId?.let { journalText(calculator, result, cleanNote) },
+                at = clock(),
+            )
+        }
+    }
+
+    suspend fun calcFavorites(): Set<String> = withContext(Dispatchers.IO) {
+        mutex.withLock { database.calcFavorites() }
+    }
+
+    suspend fun setCalcFavorite(calculator: Calculator, favorite: Boolean) =
+        withContext(Dispatchers.IO) {
+            mutex.withLock {
+                database.setCalcFavorite(calculator.id, calculator.title, favorite, clock())
+            }
+        }
+
     suspend fun dueReminders(): List<DueReminder> = withContext(Dispatchers.IO) {
         mutex.withLock { database.dueReminders(clock()) }
+    }
+
+    private fun journalText(
+        calculator: Calculator,
+        result: CalcResult,
+        note: String?,
+    ): String {
+        val first = result.outputs.firstOrNull()
+        val summary = if (first == null) {
+            "Расчёт «${calculator.title}»"
+        } else {
+            "Расчёт «${calculator.title}»: ${first.label.lowercase()} — ${display(first.value, first.decimals)} ${first.unit}"
+                .trim()
+        }
+        return listOfNotNull(summary, note).joinToString("\n")
+    }
+
+    private fun display(value: Double, decimals: Int): String {
+        val formatted = String.format(Locale.forLanguageTag("ru"), "%.${decimals}f", value)
+        return if ('.' in formatted) formatted.trimEnd('0').trimEnd('.') else formatted
     }
 
     private fun insertBatch(
@@ -246,5 +314,6 @@ class BatchRepository(
         steps = database.steps(batch.id),
         measurements = database.measurements(batch.id),
         journal = database.journal(batch.id),
+        savedCalcs = database.savedCalcs(batch.id),
     )
 }
