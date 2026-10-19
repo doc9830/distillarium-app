@@ -1,10 +1,10 @@
 # distillarium-app
 
-**GitHub:** <https://github.com/doc9830/distillarium-app> (приватный)
+**GitHub:** <https://github.com/doc9830/distillarium-app>
 
 Android-приложение «Дистиллярий»: вики, справочник, калькуляторы, партии и
 рецепты. Офлайн-первый: весь контент лежит на устройстве, сеть нужна только
-для обновления контента.
+для обновления контента и приложения.
 
 **Лицензия:** source available, см. [`LICENSE`](LICENSE). Код открытым
 исходным не является.
@@ -20,7 +20,7 @@ Android-приложение «Дистиллярий»: вики, справо�
 | M2. Справочник и калькуляторы | собран: таблицы из пакета, 6 стартовых калькуляторов отмечены в контент-каталоге, связи «статья ↔ таблица ↔ калькулятор»; в приложении всего 26 формул, расчёты покрыты JVM-тестами; основные экраны проверены smoke-тестом на устройстве |
 | M3. Партии и рецепты | собран: `user.db`, шаблоны рецептов из контента, шаги, замеры, журнал, график плотности, повтор партии, локальные напоминания; JVM-тесты, lint и debug APK зелёные; партия и напоминание проверены на устройстве |
 | M4. Остальные калькуляторы и связность | собран: переходы между калькуляторами, сохранение расчёта в партию и журнал, избранное, автозаполнение из партии, шаблон «Перегонка вина»; JVM-тесты, lint и debug APK зелёные |
-| M5. Полировка и релиз | не начат |
+| M5. Полировка и релиз | в работе: OTA-обновление APK через GitHub Releases, релизная подпись, версия `1.0.0`; release APK собран и установлен на устройство |
 
 Контент живёт в отдельном репозитории
 [`doc9830/distillarium-content`](https://github.com/doc9830/distillarium-content):
@@ -34,12 +34,15 @@ app/                      Android-приложение: Compose, «Главна�
   src/main/java/.../knowledge/  разбор статей, дерево, поиск, загрузка пакета
   src/main/java/.../batches/    user.db, партии, шаги, напоминания
   src/main/java/.../recipes/    шаблоны рецептов из пакета
+  src/main/java/.../appupdate/ проверка app-manifest.json, загрузка и установка APK
   src/main/java/.../ui/         экраны, Markdown-рендер, навигация
   src/main/assets/        content-pack.zip и manifest.json (встроенный пакет)
 core/content/             Kotlin/JVM: манифест, проверка, ZIP, подмена, откат
 core/data/                не используется: user.db работает на SQLiteOpenHelper в app/batches
 tools/sync-content.mjs    копирование собранного пакета в assets
-.github/workflows/app.yml тесты, lint, APK
+tools/app-release-manifest.mjs  app-manifest.json для GitHub Releases
+.github/workflows/app.yml       тесты, lint, APK
+.github/workflows/release.yml   релиз APK по тегу app-v* и обновление app-latest
 ```
 
 `core/content` не знает об Android и UI: его тесты идут на JVM без эмулятора.
@@ -180,10 +183,11 @@ temp-каталог и проверяет 33 статьи, 78 ссылок, 33 �
 https://github.com/doc9830/distillarium-content/releases/download/content-latest/manifest.json
 ```
 
-Оба репозитория пока **приватные**. GitHub не отдаёт релизные файлы приватного
-репозитория без авторизации, поэтому проверка обновлений с этим адресом вернёт
-ошибку сети/404; встроенный пакет при этом работает. Чтобы включить OTA, сделайте
-`distillarium-content` публичным либо укажите свой HTTPS-адрес без правки кода:
+Репозиторий контента пока **приватный**. GitHub не отдаёт релизные файлы
+приватного репозитория без авторизации, поэтому проверка обновлений контента с
+этим адресом вернёт ошибку сети/404; встроенный пакет при этом работает. Чтобы
+включить OTA контента, сделайте `distillarium-content` публичным либо укажите
+свой HTTPS-адрес без правки кода:
 
 ```bash
 ./gradlew -Pdistillarium.contentManifestUrl=https://example.org/content/manifest.json assembleDebug
@@ -193,6 +197,82 @@ https://github.com/doc9830/distillarium-content/releases/download/content-latest
 берётся из соседнего asset: `…/content-pack.zip` рядом с `manifest.json`.
 Релиз `content-latest` должен содержать оба файла — так его собирает
 workflow репозитория контента.
+
+## Обновление приложения
+
+Версия приложения хранится в `app/version.properties` в виде `versionName=1.0.0`.
+`versionCode` не задаётся вручную: Gradle, Kotlin-парсер и
+`tools/app-release-manifest.mjs` считают его одинаково —
+
+```
+versionCode = major * 1_000_000 + minor * 1_000 + patch
+```
+
+По умолчанию приложение проверяет
+
+```
+https://github.com/doc9830/distillarium-app/releases/download/app-latest/app-manifest.json
+```
+
+`app-latest` — изменяемый релиз только с `app-manifest.json`; сам APK лежит в
+неизменяемом релизе `app-v<версия>`, поэтому ссылка и sha256 в манифесте не
+меняются. Проверка идёт при запуске и по кнопке на вкладке «Обновления».
+Если версия в манифесте новее установленной, на «Сейчас» появляется баннер,
+а на «Обновлениях» — карточка с версией, размером и заметками.
+
+Загрузка и установка:
+
+1. APK скачивается в `files/app-update/` с проверкой размера и sha256 по мере
+   чтения; несовпадение удаляет файл.
+2. Перед установкой проверяются package name, `versionCode` и сертификат
+   подписи: обновление должно быть подписано тем же ключом, что и установленное
+   приложение.
+3. Открывается штатный установщик Android. Приложение не устанавливает APK
+   молча: нужны разрешение `REQUEST_INSTALL_PACKAGES` и «Установка неизвестных
+   приложений» для «Дистиллярия». После возврата из настроек экран повторяет
+   установку.
+4. `user.db`, партии, замеры и настройки не затрагиваются.
+
+Проверить вкладку на устройстве можно без ручных нажатий:
+
+```bash
+adb shell am start -n ru.distillarium/.MainActivity \
+  --es ru.distillarium.extra.START_TAB Updates
+```
+
+### Релиз
+
+Релизная подпись — отдельный ключ, не debug:
+
+```bash
+keytool -genkeypair -v -keystore ~/.android/distillarium-release.jks \
+  -alias distillarium -keyalg RSA -keysize 4096 -validity 10000
+```
+
+`keystore.properties` в корне репозитория (в git не попадает):
+
+```properties
+storeFile=/home/user/.android/distillarium-release.jks
+storePassword=…
+keyAlias=distillarium
+keyPassword=…
+```
+
+Локальная сборка: `./gradlew assembleRelease`. APK будет подписан, если
+`keystore.properties` существует; без него Gradle соберёт неподписанный APK.
+
+Публикация:
+
+1. Поднять `versionName` в `app/version.properties` (например, `1.0.1`) и
+   закоммитить.
+2. Поставить тег `app-v1.0.1` и запушить его:
+   `git tag app-v1.0.1 && git push origin app-v1.0.1`.
+3. Workflow `.github/workflows/release.yml` проверит совпадение тега и версии,
+   прогонит тесты и lint, соберёт и проверит подпись APK, создаст релиз
+   `app-v1.0.1` с APK и `app-manifest.json`, затем обновит `app-latest`.
+
+Секреты репозитория: `APP_KEYSTORE_BASE64` (base64 от `.jks`),
+`APP_KEYSTORE_PASSWORD`, `APP_KEY_ALIAS`, `APP_KEY_PASSWORD`.
 
 ## Что происходит при запуске и обновлении
 
@@ -265,12 +345,13 @@ databases/
   не больше пяти самых ранних шагов за запуск; точное время доставки зависит
   от Doze/WorkManager. Доставка проверена на устройстве через
   `BatchReminderWorker`; уведомление не открывает партию по нажатию.
-- WorkManager проверяет обновления раз в сутки по unmetered-сети; уведомлений
-  об обновлении пока нет (M5).
+- WorkManager проверяет обновления контента раз в сутки по unmetered-сети;
+  обновление APK проверяется при запуске и вручную, уведомлений об этом пока нет.
 - M4 на реальном устройстве ещё не принят вручную: проверены сборка, тесты
   и lint, но не сценарий «сохранить расчёт → открыть из партии».
 - Лицензия на контент ещё не выбрана (см. `docs/10` в корне проекта).
-- Git remote и запуск GitHub Actions не настроены.
+- Репозиторий контента остаётся приватным: OTA контента не работает без
+  публичного адреса. OTA приложения использует публичный `distillarium-app`.
 
 ## Что нельзя нарушать
 

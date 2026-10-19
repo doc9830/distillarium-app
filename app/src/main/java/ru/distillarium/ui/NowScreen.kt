@@ -49,6 +49,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import ru.distillarium.R
+import ru.distillarium.appupdate.AppUpdateStatus
+import ru.distillarium.appupdate.AppUpdateUiState
 import ru.distillarium.batches.BatchDetails
 import ru.distillarium.batches.BatchRules
 import ru.distillarium.batches.BatchStatus
@@ -58,12 +60,14 @@ import ru.distillarium.batches.ReminderNotifications
 @Composable
 fun NowScreen(
     state: BatchesUiState,
+    appUpdate: AppUpdateUiState,
     onOpenBatch: (Long) -> Unit,
     onNewBatch: () -> Unit,
     onCompleteStep: (BatchStep) -> Unit,
     onRetry: () -> Unit,
     onOpenKnowledge: () -> Unit,
     onOpenCalculators: () -> Unit,
+    onOpenUpdates: () -> Unit,
 ) {
     val now = System.currentTimeMillis()
     val active = state.cards.filter { it.batch.status == BatchStatus.Active }
@@ -129,6 +133,16 @@ fun NowScreen(
             }
             item(key = "notifications") {
                 NotificationPermissionCard()
+            }
+            if (
+                appUpdate.status == AppUpdateStatus.Available ||
+                appUpdate.status == AppUpdateStatus.Downloading ||
+                appUpdate.status == AppUpdateStatus.ReadyToInstall ||
+                appUpdate.status == AppUpdateStatus.NeedsPermission
+            ) {
+                item(key = "app-update") {
+                    AppUpdateBanner(state = appUpdate, onOpen = onOpenUpdates)
+                }
             }
             item(key = "sections") {
                 Row(
@@ -207,6 +221,44 @@ fun NowScreen(
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppUpdateBanner(state: AppUpdateUiState, onOpen: () -> Unit) {
+    val version = state.availableVersion ?: return
+    Card(
+        onClick = onOpen,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 18.dp, top = 14.dp, end = 8.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.now_app_update_title),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    text = stringResource(R.string.now_app_update_text, version),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            TextButton(onClick = onOpen) {
+                Text(stringResource(R.string.now_app_update_action))
             }
         }
     }

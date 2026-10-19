@@ -32,15 +32,29 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import ru.distillarium.R
+import ru.distillarium.appupdate.AppUpdateStatus
+import ru.distillarium.appupdate.AppUpdateUiState
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdatesScreen(
     state: UpdatesUiState,
+    appUpdate: AppUpdateUiState,
     onCheckUpdates: () -> Unit,
     onRollback: () -> Unit,
+    onCheckAppUpdate: () -> Unit,
+    onDownloadAppUpdate: () -> Unit,
+    onOpenInstallPermission: () -> Unit,
+    onAppUpdateResume: () -> Unit,
+    onInstallDownloaded: () -> Unit,
 ) {
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        onAppUpdateResume()
+    }
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
@@ -73,6 +87,13 @@ fun UpdatesScreen(
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            AppUpdateCard(
+                state = appUpdate,
+                onCheck = onCheckAppUpdate,
+                onDownload = onDownloadAppUpdate,
+                onOpenInstallPermission = onOpenInstallPermission,
+                onInstallDownloaded = onInstallDownloaded,
+            )
             InstalledCard(state)
             PreviousCard(state)
             Buttons(state, onCheckUpdates, onRollback)
@@ -118,6 +139,172 @@ fun UpdatesScreen(
         }
     }
 }
+
+@Composable
+private fun AppUpdateCard(
+    state: AppUpdateUiState,
+    onCheck: () -> Unit,
+    onDownload: () -> Unit,
+    onOpenInstallPermission: () -> Unit,
+    onInstallDownloaded: () -> Unit,
+) {
+    androidx.compose.material3.Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.app_update_title).uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = stringResource(R.string.app_version_label, state.currentVersion),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            when (state.status) {
+                AppUpdateStatus.Checking -> {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    Text(
+                        text = stringResource(R.string.app_update_checking),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                AppUpdateStatus.Available -> {
+                    Text(
+                        text = stringResource(
+                            R.string.app_update_available,
+                            state.availableVersion ?: "",
+                        ),
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                    state.notes?.let { notes ->
+                        Text(
+                            text = notes,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    state.apkSize?.let { size ->
+                        Text(
+                            text = stringResource(R.string.app_update_size, formatSize(size)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Button(
+                        onClick = onDownload,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp),
+                    ) {
+                        Text(stringResource(R.string.app_update_download))
+                    }
+                }
+                AppUpdateStatus.Downloading -> {
+                    LinearProgressIndicator(
+                        progress = { (state.progress ?: 0) / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.app_update_downloading,
+                            state.progress ?: 0,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                AppUpdateStatus.NeedsPermission -> {
+                    Text(
+                        text = stringResource(R.string.app_update_permission_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Button(
+                        onClick = onOpenInstallPermission,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp),
+                    ) {
+                        Text(stringResource(R.string.app_update_permission_action))
+                    }
+                }
+                AppUpdateStatus.ReadyToInstall -> {
+                    Text(
+                        text = stringResource(R.string.app_update_ready),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Button(
+                        onClick = onInstallDownloaded,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp),
+                    ) {
+                        Text(stringResource(R.string.app_update_install_again))
+                    }
+                }
+                AppUpdateStatus.UpToDate -> {
+                    Text(
+                        text = stringResource(R.string.app_update_up_to_date),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    OutlinedButton(
+                        onClick = onCheck,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp),
+                    ) {
+                        Text(stringResource(R.string.app_update_check))
+                    }
+                }
+                AppUpdateStatus.Idle -> {
+                    OutlinedButton(
+                        onClick = onCheck,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp),
+                    ) {
+                        Text(stringResource(R.string.app_update_check))
+                    }
+                }
+                AppUpdateStatus.Error -> {
+                    state.error?.let { error ->
+                        Text(
+                            text = error,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                    Button(
+                        onClick = {
+                            if (state.availableVersion != null) onDownload() else onCheck()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp),
+                    ) {
+                        Text(stringResource(R.string.app_update_retry))
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun formatSize(bytes: Long): String =
+    String.format(Locale.ROOT, "%.1f МБ", bytes / 1024.0 / 1024.0)
 
 @Composable
 private fun InstalledCard(state: UpdatesUiState) {

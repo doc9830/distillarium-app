@@ -4,6 +4,9 @@ import android.content.Context
 import java.io.File
 import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
+import ru.distillarium.appupdate.AppUpdateInstaller
+import ru.distillarium.appupdate.AppUpdateRepository
+import ru.distillarium.appupdate.HttpAppUpdateClient
 import ru.distillarium.batches.BatchRepository
 import ru.distillarium.content.ContentRepository
 import ru.distillarium.content.HttpContentClient
@@ -20,6 +23,10 @@ class AppContainer(context: Context) {
         .readTimeout(30, TimeUnit.SECONDS)
         .callTimeout(60, TimeUnit.SECONDS)
         .followRedirects(true)
+        .build()
+    private val appUpdateHttpClient = httpClient.newBuilder()
+        .callTimeout(10, TimeUnit.MINUTES)
+        .readTimeout(60, TimeUnit.SECONDS)
         .build()
     private val httpContentClient = HttpContentClient(
         client = httpClient,
@@ -51,4 +58,16 @@ class AppContainer(context: Context) {
 
     val wikiRepository: WikiRepository = WikiRepository(contentRepository)
     val batchRepository: BatchRepository = BatchRepository(appContext)
+
+    val appUpdateRepository: AppUpdateRepository = AppUpdateRepository(
+        context = appContext,
+        client = HttpAppUpdateClient(
+            client = appUpdateHttpClient,
+            userAgent = "Distillarium/${BuildConfig.VERSION_NAME} (Android)",
+        ),
+        manifestUrl = BuildConfig.APP_UPDATE_MANIFEST_URL,
+        currentVersionCode = BuildConfig.VERSION_CODE,
+        currentVersionName = BuildConfig.VERSION_NAME,
+    )
+    val appUpdateInstaller: AppUpdateInstaller = AppUpdateInstaller(appContext)
 }

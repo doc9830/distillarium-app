@@ -4,6 +4,20 @@
     <string name="nav_back">Назад</string>
 
     <string name="updates_title">Обновления</string>
+    <string name="app_update_title">Приложение</string>
+    <string name="app_version_label">Версия %1$s</string>
+    <string name="app_update_check">Проверить обновление приложения</string>
+    <string name="app_update_checking">Проверяем обновление приложения…</string>
+    <string name="app_update_available">Доступна версия %1$s</string>
+    <string name="app_update_size">Размер: %1$s</string>
+    <string name="app_update_download">Скачать и установить</string>
+    <string name="app_update_downloading">Скачиваем APK: %1$d%%</string>
+    <string name="app_update_permission_hint">Разрешите установку из этого приложения в настройках Android.</string>
+    <string name="app_update_permission_action">Разрешить установку</string>
+    <string name="app_update_ready">Подтвердите установку в системном окне.</string>
+    <string name="app_update_install_again">Открыть установщик</string>
+    <string name="app_update_up_to_date">Установлена последняя версия приложения.</string>
+    <string name="app_update_retry">Повторить</string>
     <string name="installed_content">Установленный контент</string>
     <string name="version_label">Версия %1$s</string>
     <string name="schema_label">Схема %1$d</string>
@@ -140,6 +154,9 @@
     <string name="now_notifications_title">Включите напоминания</string>
     <string name="now_notifications_text">Приложение подскажет, когда подходит срок шага. Без сервера и интернета.</string>
     <string name="now_notifications_enable">Разрешить уведомления</string>
+    <string name="now_app_update_title">Доступно обновление приложения</string>
+    <string name="now_app_update_text">Версия %1$s готова к установке.</string>
+    <string name="now_app_update_action">Открыть</string>
     <string name="now_retry">Попробовать снова</string>
 
     <string name="batches_title">Партии</string>

@@ -27,11 +27,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.distillarium.R
+import ru.distillarium.appupdate.AppUpdateViewModel
 import ru.distillarium.calculators.Calculators
 
 private enum class RootTab {
@@ -47,16 +49,24 @@ private enum class RootTab {
 fun DistillariumRoot(
     initialArticleId: String? = null,
     initialArticleHeading: String? = null,
+    initialTab: String? = null,
 ) {
     val knowledgeViewModel: KnowledgeViewModel = viewModel()
     val updatesViewModel: UpdatesViewModel = viewModel()
+    val appUpdateViewModel: AppUpdateViewModel = viewModel()
     val batchesViewModel: BatchesViewModel = viewModel()
     val knowledge by knowledgeViewModel.state.collectAsStateWithLifecycle()
     val updates by updatesViewModel.state.collectAsStateWithLifecycle()
+    val appUpdate by appUpdateViewModel.state.collectAsStateWithLifecycle()
     val batches by batchesViewModel.state.collectAsStateWithLifecycle()
     val knowledgeListState = rememberLazyListState()
+    val context = LocalContext.current
 
-    var tabName by rememberSaveable { mutableStateOf(RootTab.Now.name) }
+    var tabName by rememberSaveable {
+        mutableStateOf(
+            RootTab.entries.firstOrNull { it.name == initialTab }?.name ?: RootTab.Now.name,
+        )
+    }
     var routeStack by rememberSaveable { mutableStateOf("") }
     var initialArticleApplied by rememberSaveable { mutableStateOf(false) }
     var equipment by rememberSaveable { mutableStateOf<String?>(null) }
@@ -119,6 +129,11 @@ fun DistillariumRoot(
     fun openCalculators() {
         routeStack = ""
         tabName = RootTab.Calculators.name
+    }
+
+    fun openUpdates() {
+        routeStack = ""
+        tabName = RootTab.Updates.name
     }
 
     fun deleteBatch(batchId: Long) {
@@ -316,6 +331,7 @@ fun DistillariumRoot(
             when (tab) {
                 RootTab.Now -> NowScreen(
                     state = batches,
+                    appUpdate = appUpdate,
                     onOpenBatch = ::openBatch,
                     onNewBatch = ::openNewBatch,
                     onCompleteStep = { step ->
@@ -324,6 +340,7 @@ fun DistillariumRoot(
                     onRetry = batchesViewModel::refresh,
                     onOpenKnowledge = ::openKnowledge,
                     onOpenCalculators = ::openCalculators,
+                    onOpenUpdates = ::openUpdates,
                 )
                 RootTab.Batches -> BatchesScreen(
                     state = batches,
@@ -350,8 +367,24 @@ fun DistillariumRoot(
                 )
                 RootTab.Updates -> UpdatesScreen(
                     state = updates,
+                    appUpdate = appUpdate,
                     onCheckUpdates = { updatesViewModel.checkUpdates() },
                     onRollback = updatesViewModel::rollback,
+                    onCheckAppUpdate = { appUpdateViewModel.checkForUpdate() },
+                    onDownloadAppUpdate = appUpdateViewModel::downloadAndInstall,
+                    onOpenInstallPermission = {
+                        runCatching {
+                            appUpdateViewModel.openInstallPermissionSettings()
+                        }.onSuccess { intent ->
+                            runCatching {
+                                context.startActivity(intent)
+                            }.onFailure { error ->
+                                android.util.Log.w("Updates", "Не удалось открыть настройки", error)
+                            }
+                        }
+                    },
+                    onAppUpdateResume = appUpdateViewModel::onResume,
+                    onInstallDownloaded = appUpdateViewModel::installDownloaded,
                 )
             }
         }
