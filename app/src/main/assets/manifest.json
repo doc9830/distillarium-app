@@ -1,10 +1,10 @@
 {
-  "contentVersion": "2026.10.10",
+  "contentVersion": "2026.10.11",
   "schemaVersion": 1,
-  "minAppVersion": "1.0.2",
+  "minAppVersion": "1.0.4",
   "released": "2026-10-19",
-  "packSize": 20069,
-  "packSha256": "29023e7a3ba9c2e93f94fb07247d6c3572cb41d87f62699151b28635115a2eda",
+  "packSize": 20072,
+  "packSha256": "3f8a5533b9a31f634fcc46034e0d479b249c818feb0dcdd4f3fe38db0647c47f",
   "files": [
     {
       "path": "calculators.json",

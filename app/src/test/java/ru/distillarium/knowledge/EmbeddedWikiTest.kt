@@ -26,7 +26,7 @@ class EmbeddedWikiTest {
         )
         val library = WikiLoader.load(File(temp.root, "files/content/current"))
 
-        assertEquals("2026.10.10", library.contentVersion)
+        assertEquals("2026.10.11", library.contentVersion)
         assertEquals(2, library.articles.size)
         assertEquals(4, library.roots.size)
         assertEquals(

@@ -28,7 +28,7 @@ class EmbeddedContentTest {
         val installer = ContentInstaller(temp.newFolder("files"), BuildConfig.VERSION_NAME)
         val content = installer.ensureInstalled(pack, manifest)
 
-        assertEquals("2026.10.10", content.state.contentVersion)
+        assertEquals("2026.10.11", content.state.contentVersion)
         assertEquals(1, content.state.schemaVersion)
         assertEquals(2, content.validation?.articles)
         assertEquals(1, content.validation?.links)
