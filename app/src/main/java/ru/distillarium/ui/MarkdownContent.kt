@@ -137,14 +137,14 @@ private fun ParagraphBlock(
 ) {
     val style = MaterialTheme.typography.bodyLarge.copy(
         fontSize = 16.sp * textScale,
-        lineHeight = 25.sp * textScale,
+        lineHeight = 26.sp * textScale,
     )
     SelectionContainer {
         Text(
             text = inlineText(node, onWikiLink),
             modifier = modifier
                 .fillMaxWidth()
-                .padding(vertical = 5.dp),
+                .padding(top = 4.dp, bottom = 16.dp),
             style = style,
             color = MaterialTheme.colorScheme.onSurface,
         )
@@ -178,7 +178,7 @@ private fun MarkdownList(
                         textAlign = TextAlign.End,
                         style = MaterialTheme.typography.bodyLarge.copy(
                             fontSize = 16.sp * textScale,
-                            lineHeight = 25.sp * textScale,
+                            lineHeight = 26.sp * textScale,
                         ),
                         fontWeight = FontWeight.Medium,
                         color = if (ordered) {
@@ -199,7 +199,7 @@ private fun MarkdownList(
                                         .padding(vertical = 2.dp),
                                     style = MaterialTheme.typography.bodyLarge.copy(
                                         fontSize = 16.sp * textScale,
-                                        lineHeight = 25.sp * textScale,
+                                        lineHeight = 26.sp * textScale,
                                     ),
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )

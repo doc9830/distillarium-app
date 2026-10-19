@@ -1,6 +1,7 @@
 package ru.distillarium.knowledge
 
 import java.io.File
+import org.commonmark.node.BulletList
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -26,7 +27,7 @@ class EmbeddedWikiTest {
         )
         val library = WikiLoader.load(File(temp.root, "files/content/current"))
 
-        assertEquals("2026.10.11", library.contentVersion)
+        assertEquals("2026.10.12", library.contentVersion)
         assertEquals(2, library.articles.size)
         assertEquals(4, library.roots.size)
         assertEquals(
@@ -72,6 +73,14 @@ class EmbeddedWikiTest {
             "нет статьи про сахаромер"
         }
         assertTrue(sugarMeter.headings.any { it.title.startsWith("Ареометр-сахаромер") })
+        assertTrue(
+            sugarMeter.headings.any { it.title == "Что смотреть при выборе" && it.level == 3 },
+        )
+        val spiritMeter = requireNotNull(library.article("articles/areometr-spirtomer")) {
+            "нет статьи про спиртомер"
+        }
+        assertTrue(spiritMeter.headings.any { it.title == "Диапазоны" && it.level == 3 })
+        assertTrue(MarkdownParser.parse(spiritMeter.body).any { it is BulletList })
         assertTrue(library.search("сахаромер").any { it.article.id == sugarMeter.id })
         assertTrue(
             library.search("спиртомер")

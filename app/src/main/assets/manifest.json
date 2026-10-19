@@ -1,10 +1,10 @@
 {
-  "contentVersion": "2026.10.11",
+  "contentVersion": "2026.10.12",
   "schemaVersion": 1,
   "minAppVersion": "1.0.4",
   "released": "2026-10-19",
   "packSize": 20072,
-  "packSha256": "3f8a5533b9a31f634fcc46034e0d479b249c818feb0dcdd4f3fe38db0647c47f",
+  "packSha256": "f67f284519f8ead0556b6af218c69e196be34f061aaa4657cc1bcefdcfff75da",
   "files": [
     {
       "path": "calculators.json",
@@ -83,8 +83,8 @@
     },
     {
       "path": "search/index.json",
-      "sha256": "d31770fd96258043c894c9c5222e5554bac6eeae8e65bb0a6fbe89e34a38896d",
-      "size": 6800
+      "sha256": "c06b9ac27831b6f3537ea9fe8017f9fcd0c00f8b5a377937bdbc8b332e235a63",
+      "size": 6960
     },
     {
       "path": "tree.json",
@@ -93,16 +93,16 @@
     },
     {
       "path": "wiki/articles/areometr-saharomer.md",
-      "sha256": "e38465e193c01247d4255541c93b84aef648bdf40a0b3a2972f7afa01be38323",
-      "size": 3020
+      "sha256": "078a2c33563106596a120067943e13dbdf8b928aab901c1c32cc5c9962b4f9be",
+      "size": 3015
     },
     {
       "path": "wiki/articles/areometr-spirtomer.md",
-      "sha256": "52e4d0dcf074b2512616d1b91a1141d622c4862854e9a51a8c1fe0666c774c12",
-      "size": 3423
+      "sha256": "feb95ec90cb48e120c0b0a1497d7741157ab2abdfe953169d04332e8d6de0ca5",
+      "size": 3399
     }
   ],
   "searchIndex": "search/index.json",
-  "searchIndexSha256": "d31770fd96258043c894c9c5222e5554bac6eeae8e65bb0a6fbe89e34a38896d",
+  "searchIndexSha256": "c06b9ac27831b6f3537ea9fe8017f9fcd0c00f8b5a377937bdbc8b332e235a63",
   "redirects": "redirects.json"
 }
