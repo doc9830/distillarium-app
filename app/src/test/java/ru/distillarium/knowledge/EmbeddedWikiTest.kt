@@ -27,8 +27,8 @@ class EmbeddedWikiTest {
         )
         val library = WikiLoader.load(File(temp.root, "files/content/current"))
 
-        assertEquals("2026.10.12", library.contentVersion)
-        assertEquals(2, library.articles.size)
+        assertEquals("2026.10.16", library.contentVersion)
+        assertEquals(13, library.articles.size)
         assertEquals(4, library.roots.size)
         assertEquals(
             listOf("Самогоноварение", "Виноделие", "Пивоварение", "Оборудование"),
@@ -36,7 +36,7 @@ class EmbeddedWikiTest {
         )
         assertEquals(0, library.redirects.size)
         assertEquals(6, library.referenceTables.size)
-        assertEquals(7, library.tags.size)
+        assertEquals(22, library.tags.size)
         assertTrue(library.tags.any { it.label == "ареометр" })
         assertTrue(library.tags.none { it.label == "Оборудование" })
 
@@ -86,7 +86,10 @@ class EmbeddedWikiTest {
             library.search("спиртомер")
                 .any { it.article.id == "articles/areometr-spirtomer" },
         )
-        assertTrue(library.backlinks(sugarMeter.id).isEmpty())
+        assertEquals(
+            listOf("articles/pervaya-peregonka-na-pryamotochnom-apparate"),
+            library.backlinks(sugarMeter.id).map { it.id },
+        )
 
         val recipes = RecipeLoader.load(File(temp.root, "files/content/current"))
         assertEquals(7, recipes.size)

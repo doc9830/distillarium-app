@@ -1,15 +1,15 @@
 {
-  "contentVersion": "2026.10.12",
+  "contentVersion": "2026.10.16",
   "schemaVersion": 1,
   "minAppVersion": "1.0.4",
   "released": "2026-10-19",
-  "packSize": 20072,
-  "packSha256": "f67f284519f8ead0556b6af218c69e196be34f061aaa4657cc1bcefdcfff75da",
+  "packSize": 49762,
+  "packSha256": "7388253a10aa094a3d89ed0f8260254f83492df5b198b7e0051ef0d7fc0a39da",
   "files": [
     {
       "path": "calculators.json",
-      "sha256": "c0a1da301ee1cacf1f3c02d71efa87b77bf87169ffac4bae60d3abc13a8efc96",
-      "size": 2024
+      "sha256": "76fb2cd5ce63bbfb545c6d0cf712b893c75bc296af3d6f898f78cbc47614471f",
+      "size": 9304
     },
     {
       "path": "recipes/apple-wine-sweet.json",
@@ -83,13 +83,13 @@
     },
     {
       "path": "search/index.json",
-      "sha256": "c06b9ac27831b6f3537ea9fe8017f9fcd0c00f8b5a377937bdbc8b332e235a63",
-      "size": 6960
+      "sha256": "5ef3fae1095d40ac2d3f69285fa318487014a2709938372d9944f02531395764",
+      "size": 46159
     },
     {
       "path": "tree.json",
-      "sha256": "2e01efbba7561880732069778a2a110ed2fa179f1867a7ce0f4ab79060089540",
-      "size": 3295
+      "sha256": "e5477740a03260880c4ef1fdd54d497ca6a2dc2bcf962d1b4120c42f54d484f8",
+      "size": 5695
     },
     {
       "path": "wiki/articles/areometr-saharomer.md",
@@ -100,9 +100,64 @@
       "path": "wiki/articles/areometr-spirtomer.md",
       "sha256": "feb95ec90cb48e120c0b0a1497d7741157ab2abdfe953169d04332e8d6de0ca5",
       "size": 3399
+    },
+    {
+      "path": "wiki/articles/brodilnaya-emkost.md",
+      "sha256": "b8d03ba45936f5265efd30859e3e1a87b446b83bf9ff2b46171d6fc6086da3bf",
+      "size": 3193
+    },
+    {
+      "path": "wiki/articles/gazovaya-plita.md",
+      "sha256": "f6e58ab61a6e67833d945e9a93191a3eb9fc5d56ed060d48426a97406766b24b",
+      "size": 3221
+    },
+    {
+      "path": "wiki/articles/holodilnik-dlya-pryamotoka.md",
+      "sha256": "466913a29cc6356e96b30a0e380dec51cbad955124997228ff8dec81b9706f05",
+      "size": 3970
+    },
+    {
+      "path": "wiki/articles/indukcionnaya-plita.md",
+      "sha256": "6a02d3058efebb06700e2c99a5429dd8fb876e9cb71182b7d400e7286437baec",
+      "size": 5490
+    },
+    {
+      "path": "wiki/articles/mernyy-cilindr.md",
+      "sha256": "a108fe191be73c2a3f1ebf60b303e731bbf7f9505bf9d2c996d68ce08e71c7ad",
+      "size": 3311
+    },
+    {
+      "path": "wiki/articles/peregonnyy-kub.md",
+      "sha256": "875e38172e69c38338c21859a6b334c88f2ee2f2d28a2827fc5c9632aeaea0cd",
+      "size": 2636
+    },
+    {
+      "path": "wiki/articles/pervaya-peregonka-na-pryamotochnom-apparate.md",
+      "sha256": "01e822330318caa4db82648e3ac58982136860b24d497a68fe7aec665094062e",
+      "size": 3221
+    },
+    {
+      "path": "wiki/articles/refraktometr.md",
+      "sha256": "05fb8c1e18a99d8b6ae63db35be0f824ed5d51a8a30ae79fe8e8642c72ba5905",
+      "size": 2828
+    },
+    {
+      "path": "wiki/articles/samogonnyy-popugay.md",
+      "sha256": "ff380e329ca4c8e3794988c74906731f39242ee1befc8dc5d4b0b78fbba21b2e",
+      "size": 3204
+    },
+    {
+      "path": "wiki/articles/ten.md",
+      "sha256": "acad4cabf1a7adeb48c1b9dea9215b7e9391a4a5211563d18ddcea466cbd8661",
+      "size": 3764
+    },
+    {
+      "path": "wiki/articles/termometr.md",
+      "sha256": "9499fcc3051a35fa52e156a5076b73eea7ca48f2c41157d2690053e80a8c91de",
+      "size": 3125
     }
   ],
   "searchIndex": "search/index.json",
-  "searchIndexSha256": "c06b9ac27831b6f3537ea9fe8017f9fcd0c00f8b5a377937bdbc8b332e235a63",
+  "searchIndexSha256": "5ef3fae1095d40ac2d3f69285fa318487014a2709938372d9944f02531395764",
   "redirects": "redirects.json"
 }

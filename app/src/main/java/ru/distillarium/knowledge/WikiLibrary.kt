@@ -14,6 +14,25 @@ data class WikiNode(
     val isArticle: Boolean get() = articleId != null
 }
 
+/** Находит раздел по стабильному ключу в уже отфильтрованном дереве. */
+fun List<WikiNode>.findNode(key: String): WikiNode? {
+    for (node in this) {
+        if (node.key == key) return node
+        node.children.findNode(key)?.let { return it }
+    }
+    return null
+}
+
+/** Возвращает путь от корня до раздела включительно. */
+fun List<WikiNode>.trailTo(key: String): List<WikiNode> {
+    for (node in this) {
+        if (node.key == key) return listOf(node)
+        val childTrail = node.children.trailTo(key)
+        if (childTrail.isNotEmpty()) return listOf(node) + childTrail
+    }
+    return emptyList()
+}
+
 /** Тег для быстрого входа в дерево. */
 data class WikiTag(
     val key: String,

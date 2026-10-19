@@ -14,6 +14,8 @@ import ru.distillarium.knowledge.ReferenceTable
 import ru.distillarium.knowledge.SearchResult
 import ru.distillarium.knowledge.WikiLibrary
 import ru.distillarium.knowledge.WikiNode
+import ru.distillarium.knowledge.findNode
+import ru.distillarium.knowledge.trailTo
 
 enum class KnowledgeMode {
     Articles,
@@ -29,10 +31,13 @@ data class KnowledgeUiState(
     val mode: KnowledgeMode = KnowledgeMode.Articles,
     val query: String = "",
     val selectedTag: String? = null,
-    val expanded: Set<String> = emptySet(),
+    val sectionPath: List<String> = emptyList(),
     val error: String? = null,
 ) {
     val searching: Boolean get() = query.isNotBlank()
+    val sectionTrail: List<WikiNode>
+        get() = sectionPath.lastOrNull()?.let { key -> roots.trailTo(key) }.orEmpty()
+    val currentSection: WikiNode? get() = sectionTrail.lastOrNull()
 }
 
 class KnowledgeViewModel(application: Application) : AndroidViewModel(application) {
@@ -63,18 +68,18 @@ class KnowledgeViewModel(application: Application) : AndroidViewModel(applicatio
                     val tag = current.selectedTag?.takeIf { key ->
                         library.tags.any { it.key == key }
                     }
-                    val expanded = if (clear || current.library == null) {
-                        defaultExpanded(library)
-                    } else {
-                        current.expanded + library.roots.map { it.key }
-                    }
                     val roots = library.rootsFor(tag)
+                    val sectionPath = if (clear || current.library == null) {
+                        emptyList()
+                    } else {
+                        current.sectionPath.takeWhile { key -> roots.findNode(key) != null }
+                    }
                     current.copy(
                         loading = false,
                         library = library,
                         roots = roots,
                         selectedTag = tag,
-                        expanded = expanded,
+                        sectionPath = sectionPath,
                         results = if (current.query.isBlank()) {
                             emptyList()
                         } else {
@@ -133,6 +138,7 @@ class KnowledgeViewModel(application: Application) : AndroidViewModel(applicatio
             current.copy(
                 selectedTag = tag,
                 roots = library.rootsFor(tag),
+                sectionPath = emptyList(),
                 results = if (current.query.isBlank()) {
                     emptyList()
                 } else {
@@ -142,20 +148,21 @@ class KnowledgeViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun toggleExpanded(key: String) {
+    fun openSection(key: String) {
         _state.update { current ->
-            current.copy(
-                expanded = if (key in current.expanded) {
-                    current.expanded - key
-                } else {
-                    current.expanded + key
-                },
-            )
+            val node = current.roots.findNode(key)
+            if (node == null || node.isArticle) {
+                current
+            } else {
+                current.copy(sectionPath = current.sectionPath + key)
+            }
         }
     }
 
-    private fun defaultExpanded(library: WikiLibrary): Set<String> = buildSet {
-        library.roots.forEach { root -> add(root.key) }
+    fun navigateBack() {
+        _state.update { current ->
+            current.copy(sectionPath = current.sectionPath.dropLast(1))
+        }
     }
 
     private companion object {

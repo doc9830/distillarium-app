@@ -57,9 +57,17 @@
     <string name="knowledge_empty_title">Статей пока нет</string>
     <string name="knowledge_empty_text">Проверьте обновления контента на вкладке «Обновления».</string>
     <string name="knowledge_open_article">Открыть статью %1$s</string>
-    <string name="knowledge_tree_expand">Раскрыть раздел %1$s</string>
-    <string name="knowledge_tree_collapse">Свернуть раздел %1$s</string>
-    <string name="knowledge_article_count">%1$d</string>
+    <string name="knowledge_sections_title">Разделы</string>
+    <string name="knowledge_subsections_title">Подразделы</string>
+    <string name="knowledge_articles_title">Статьи</string>
+    <string name="knowledge_section_empty_title">Здесь пока пусто</string>
+    <string name="knowledge_section_empty_text">В этом разделе нет статей. Вернитесь к списку разделов.</string>
+    <plurals name="knowledge_articles_plural">
+        <item quantity="one">%1$d статья</item>
+        <item quantity="few">%1$d статьи</item>
+        <item quantity="many">%1$d статей</item>
+        <item quantity="other">%1$d статьи</item>
+    </plurals>
     <string name="knowledge_mode_articles">Статьи</string>
     <string name="knowledge_mode_tables">Таблицы</string>
     <string name="knowledge_tables_empty_title">Справочников пока нет</string>
