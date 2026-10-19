@@ -30,6 +30,7 @@ object PackageValidator {
     private val OLD_LINK_RE = Regex("]\\s*\\(\\s*/articles/")
     private val MEDIA_RE = Regex("""!\[([^]]*)]\(\s*([^)\s]+)(?:\s+"[^"]*")?\s*\)""")
     private val FRONTMATTER_KEY_RE = Regex("^[A-Za-z0-9_-]+$")
+    private val TREE_ID_RE = Regex("^[a-z0-9][a-z0-9/_-]*$")
     private val json = Json { ignoreUnknownKeys = true }
 
     fun validate(packageDir: File, manifest: ContentManifest): PackageValidation {
@@ -44,6 +45,7 @@ object PackageValidator {
         validateFiles(packageDir, manifest, errors)
         validateInnerManifest(packageDir, manifest, errors)
         val articles = loadArticles(packageDir, manifest, errors)
+        validateTree(packageDir, articles, errors)
         val redirects = loadRedirects(packageDir, errors)
         validateRedirects(articles, redirects, errors)
         val objects = loadTypedObjects(packageDir, errors)
@@ -226,6 +228,85 @@ object PackageValidator {
         return raw
     }
 
+
+    /** Проверяет необязательное дерево навигации, если оно есть в пакете. */
+    private fun validateTree(
+        packageDir: File,
+        articles: List<Article>,
+        errors: MutableList<String>,
+    ) {
+        val file = File(packageDir, "tree.json")
+        if (!file.isFile) return
+        val root = try {
+            json.parseToJsonElement(file.readText(Charsets.UTF_8)) as? JsonObject
+        } catch (error: Exception) {
+            errors += "tree.json не разбирается (${error.message})"
+            return
+        }
+        if (root == null) {
+            errors += "tree.json должен быть объектом"
+            return
+        }
+        val schema = (root["schemaVersion"] as? JsonPrimitive)?.intOrNull
+        if (schema != 1) errors += "tree.json: schemaVersion должен быть 1"
+        val roots = root["roots"] as? JsonArray
+        if (roots == null) {
+            errors += "tree.json: нет массива roots"
+            return
+        }
+        val articleIds = articles.mapTo(HashSet()) { it.id }
+        val nodeIds = HashSet<String>()
+        val placed = HashMap<String, String>()
+
+        fun stringValue(element: JsonElement?): String? =
+            (element as? JsonPrimitive)?.takeIf { it.isString }?.content
+
+        fun walk(element: JsonElement, where: String, depth: Int) {
+            if (depth > 4) errors += "$where: больше четырёх уровней вложенности"
+            val node = element as? JsonObject
+            if (node == null) {
+                errors += "$where: раздел должен быть объектом"
+                return
+            }
+            val id = stringValue(node["id"])?.trim().orEmpty()
+            if (id.isEmpty()) {
+                errors += "$where: пустой id раздела"
+            } else if (!TREE_ID_RE.matches(id)) {
+                errors += "tree.json: id раздела «$id» — строчные латинские буквы, цифры, «-», «_» и «/»"
+            } else if (!nodeIds.add(id)) {
+                errors += "tree.json: дубль id раздела «$id»"
+            }
+            val title = stringValue(node["title"])?.trim().orEmpty()
+            if (title.isEmpty()) errors += "${id.ifEmpty { where }}: пустой title раздела"
+
+            val own = node["articles"]
+            if (own != null && own !is JsonArray) {
+                errors += "${id.ifEmpty { where }}: articles должен быть массивом"
+            } else if (own is JsonArray) {
+                for (item in own) {
+                    val articleId = stringValue(item)?.trim().orEmpty()
+                    if (articleId.isEmpty()) {
+                        errors += "${id.ifEmpty { where }}: пустой id статьи"
+                    } else if (articleId !in articleIds) {
+                        errors += "${id.ifEmpty { where }}: статья «$articleId» не найдена"
+                    } else if (placed.put(articleId, id) != null) {
+                        errors += "tree.json: статья «$articleId» стоит в дереве дважды"
+                    }
+                }
+            }
+
+            val children = node["children"]
+            if (children != null && children !is JsonArray) {
+                errors += "${id.ifEmpty { where }}: children должен быть массивом"
+            } else if (children is JsonArray) {
+                children.forEachIndexed { index, child ->
+                    walk(child, "${id.ifEmpty { where }} → child ${index + 1}", depth + 1)
+                }
+            }
+        }
+
+        roots.forEachIndexed { index, node -> walk(node, "tree.json: root ${index + 1}", 1) }
+    }
 
     private fun loadRedirects(
         packageDir: File,

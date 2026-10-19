@@ -30,12 +30,14 @@ object WikiLoader {
         }.getOrNull()
         val redirects = readRedirects(File(contentDir, "redirects.json"))
         val referenceTables = ReferenceLoader.load(contentDir)
+        val tree = WikiTreeParser.parse(File(contentDir, "tree.json"))
+        val roots = WikiTree.build(articles, tree)
 
         return WikiLibrary(
             articles = articles,
             redirects = redirects,
-            roots = WikiTree.build(articles),
-            tags = WikiTree.tags(articles),
+            roots = roots,
+            tags = WikiTree.tags(articles, roots),
             referenceTables = referenceTables,
             contentVersion = manifest?.contentVersion,
             released = manifest?.released,

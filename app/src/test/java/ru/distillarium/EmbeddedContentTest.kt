@@ -25,15 +25,15 @@ class EmbeddedContentTest {
         assertTrue("нет встроенного пакета: ${pack.absolutePath}", pack.isFile)
         assertTrue("нет манифеста пакета: ${manifest.absolutePath}", manifest.isFile)
 
-        val installer = ContentInstaller(temp.newFolder("files"), "0.1.0")
+        val installer = ContentInstaller(temp.newFolder("files"), BuildConfig.VERSION_NAME)
         val content = installer.ensureInstalled(pack, manifest)
 
-        assertEquals("2026.10.4", content.state.contentVersion)
+        assertEquals("2026.10.5", content.state.contentVersion)
         assertEquals(1, content.state.schemaVersion)
         assertEquals(33, content.validation?.articles)
         assertEquals(78, content.validation?.links)
         assertEquals(33, content.validation?.redirects)
-        assertEquals(49, content.validation?.files)
+        assertEquals(50, content.validation?.files)
         assertTrue(File(temp.root, "files/content/current/search/index.json").isFile)
     }
 }

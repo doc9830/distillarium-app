@@ -45,7 +45,58 @@ object WikiLabels {
 }
 
 object WikiTree {
-    fun build(articles: List<Article>): List<WikiNode> {
+    /** Строит дерево из `tree.json`, а без него — по путям старых id. */
+    fun build(articles: List<Article>, config: WikiTreeConfig? = null): List<WikiNode> {
+        if (config != null) {
+            val configured = buildConfigured(articles, config)
+            if (configured.isNotEmpty()) return configured
+        }
+        return buildByPath(articles)
+    }
+
+    private fun buildConfigured(
+        articles: List<Article>,
+        config: WikiTreeConfig,
+    ): List<WikiNode> {
+        val byId = articles.associateBy { it.id }
+        val used = LinkedHashSet<String>()
+
+        fun sectionNode(section: WikiTreeSection, depth: Int): WikiNode? {
+            if (depth > 4) return null
+            val direct = section.articles.mapNotNull { id ->
+                val article = byId[id] ?: return@mapNotNull null
+                if (!used.add(id)) return@mapNotNull null
+                leaf(article)
+            }
+            val children = section.children.mapNotNull { child ->
+                sectionNode(child, depth + 1)
+            }
+            val nodes = direct + children
+            if (nodes.isEmpty()) return null
+            return WikiNode(
+                key = "section:${section.id}",
+                title = section.title,
+                children = nodes,
+                articleIds = nodes.flatMap { it.articleIds },
+            )
+        }
+
+        val roots = config.roots.mapNotNull { sectionNode(it, depth = 1) }.toMutableList()
+        val unplaced = articles
+            .filterNot { it.id in used }
+            .sortedBy { it.title.lowercase() }
+        if (unplaced.isNotEmpty()) {
+            roots += WikiNode(
+                key = "section:__unplaced",
+                title = "Без раздела",
+                children = unplaced.map(::leaf),
+                articleIds = unplaced.map { it.id },
+            )
+        }
+        return roots
+    }
+
+    private fun buildByPath(articles: List<Article>): List<WikiNode> {
         val grouped = articles.groupBy { it.id.substringBefore('/') }
         val rootSlugs = WikiLabels.rootOrder + grouped.keys
             .filterNot { it in WikiLabels.rootOrder }
@@ -91,10 +142,23 @@ object WikiTree {
         articleIds = listOf(article.id),
     )
 
-    fun tags(articles: List<Article>): List<WikiTag> {
+    fun tags(
+        articles: List<Article>,
+        roots: List<WikiNode> = emptyList(),
+    ): List<WikiTag> {
+        val rootByArticle = HashMap<String, String>()
+        fun collect(nodes: List<WikiNode>, rootTitle: String?) {
+            for (node in nodes) {
+                val top = rootTitle ?: node.title
+                node.articleId?.let { rootByArticle[it] = top }
+                collect(node.children, top)
+            }
+        }
+        collect(roots, null)
+
         val counts = LinkedHashMap<String, Pair<String, Int>>()
         for (article in articles) {
-            for (label in WikiTags.tagsFor(article)) {
+            for (label in WikiTags.tagsFor(article, rootByArticle[article.id])) {
                 val key = WikiTags.key(label)
                 val current = counts[key]
                 counts[key] = if (current == null) label to 1 else current.first to current.second + 1

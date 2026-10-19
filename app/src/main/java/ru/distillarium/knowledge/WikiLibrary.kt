@@ -41,8 +41,19 @@ class WikiLibrary(
     private val byId = articles.associateBy { it.id }
     private val referenceById = referenceTables.associateBy { it.id }
     private val tagKeysByArticle: Map<String, Set<String>> by lazy {
+        val rootTitles = HashMap<String, String>()
+        fun collect(nodes: List<WikiNode>, root: String?) {
+            for (node in nodes) {
+                val title = root ?: node.title
+                node.articleId?.let { rootTitles[it] = title }
+                collect(node.children, title)
+            }
+        }
+        collect(roots, null)
         articles.associate { article ->
-            article.id to WikiTags.tagsFor(article).map { WikiTags.key(it) }.toSet()
+            article.id to WikiTags.tagsFor(article, rootTitles[article.id])
+                .map { WikiTags.key(it) }
+                .toSet()
         }
     }
     private val searchEngine by lazy { SearchEngine(articles, this) }
@@ -127,6 +138,7 @@ class WikiLibrary(
     }
 
     fun breadcrumb(articleId: String): String {
+        breadcrumbIn(roots, articleId)?.let { return it.joinToString(" / ") }
         val parts = articleId.split('/')
         val labels = parts.mapIndexed { index, part ->
             when {
@@ -137,6 +149,17 @@ class WikiLibrary(
         }
         val last = byId[articleId]?.title ?: parts.last()
         return (labels.filterNotNull() + last).joinToString(" / ")
+    }
+
+    private fun breadcrumbIn(nodes: List<WikiNode>, articleId: String): List<String>? {
+        for (node in nodes) {
+            val trail = listOf(node.title)
+            if (node.articleId == articleId) return trail
+            breadcrumbIn(node.children, articleId)?.let { child ->
+                return trail + child
+            }
+        }
+        return null
     }
 
     private fun prune(node: WikiNode, tagKey: String): WikiNode? {
@@ -176,13 +199,13 @@ object WikiLinks {
 }
 
 object WikiTags {
-    fun tagsFor(article: Article): List<String> {
+    fun tagsFor(article: Article, rootLabel: String? = null): List<String> {
         val result = LinkedHashSet<String>()
         article.tags.forEach { if (it.isNotBlank()) result += it.trim() }
         WikiLabels.category(article.category)
             ?.takeIf { it.isNotBlank() }
             ?.let(result::add)
-        val root = WikiLabels.root(article.id.substringBefore('/'))
+        val root = rootLabel ?: WikiLabels.root(article.id.substringBefore('/'))
         if (root.isNotBlank()) result += root
         return result.toList()
     }

@@ -1,10 +1,10 @@
 {
-  "contentVersion": "2026.10.4",
+  "contentVersion": "2026.10.5",
   "schemaVersion": 1,
-  "minAppVersion": "0.1.0",
-  "released": "2026-10-18",
-  "packSize": 93903,
-  "packSha256": "32ae04a51c643838bb12a9eec5654ed4348dc7156d1c7f0162f02bf04f6b9bab",
+  "minAppVersion": "1.0.2",
+  "released": "2026-10-19",
+  "packSize": 94950,
+  "packSha256": "f0d4fba46e8fb9b5f37365c7bf6bf0eb8f19bec1d384dfea0e671ab01f7657ca",
   "files": [
     {
       "path": "calculators.json",
@@ -85,6 +85,11 @@
       "path": "search/index.json",
       "sha256": "c9d7a12daed52ab57e0ef97cf29b3e787ac854297c3ccbe323c721cf0472a33c",
       "size": 133298
+    },
+    {
+      "path": "tree.json",
+      "sha256": "54ac7128f6d71e39b7bd274da104138433130489818a472f41e8fe76037a5879",
+      "size": 4868
     },
     {
       "path": "wiki/equipment/airlock.md",
