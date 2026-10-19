@@ -256,7 +256,6 @@ object PackageValidator {
         }
         val articleIds = articles.mapTo(HashSet()) { it.id }
         val nodeIds = HashSet<String>()
-        val placed = HashMap<String, String>()
 
         fun stringValue(element: JsonElement?): String? =
             (element as? JsonPrimitive)?.takeIf { it.isString }?.content
@@ -283,14 +282,15 @@ object PackageValidator {
             if (own != null && own !is JsonArray) {
                 errors += "${id.ifEmpty { where }}: articles должен быть массивом"
             } else if (own is JsonArray) {
+                val seenHere = HashSet<String>()
                 for (item in own) {
                     val articleId = stringValue(item)?.trim().orEmpty()
                     if (articleId.isEmpty()) {
                         errors += "${id.ifEmpty { where }}: пустой id статьи"
                     } else if (articleId !in articleIds) {
                         errors += "${id.ifEmpty { where }}: статья «$articleId» не найдена"
-                    } else if (placed.put(articleId, id) != null) {
-                        errors += "tree.json: статья «$articleId» стоит в дереве дважды"
+                    } else if (!seenHere.add(articleId)) {
+                        errors += "${id.ifEmpty { where }}: статья «$articleId» повторяется в одном разделе"
                     }
                 }
             }

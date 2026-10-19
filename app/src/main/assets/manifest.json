@@ -1,10 +1,10 @@
 {
-  "contentVersion": "2026.10.8",
+  "contentVersion": "2026.10.10",
   "schemaVersion": 1,
   "minAppVersion": "1.0.2",
   "released": "2026-10-19",
-  "packSize": 94920,
-  "packSha256": "a7471b7311b572c8ee1659cc2087bcba37c1e16fb744a792712acb694548ac51",
+  "packSize": 20069,
+  "packSha256": "29023e7a3ba9c2e93f94fb07247d6c3572cb41d87f62699151b28635115a2eda",
   "files": [
     {
       "path": "calculators.json",
@@ -13,43 +13,43 @@
     },
     {
       "path": "recipes/apple-wine-sweet.json",
-      "sha256": "ed2c95d3418592513184d34fdbed152c922009dc5a1d09b0415bdd0acbc2cc0f",
-      "size": 2012
+      "sha256": "3c916e1a54103e1cf12c57a107ebcdb4c37ddb97e3eb65dd4aa1f8f95b72bee9",
+      "size": 1827
     },
     {
       "path": "recipes/cider-25.json",
-      "sha256": "2bc51a57996313f1b74a0fde34b59e1c6f42429b0552e548115de58bca9973e4",
-      "size": 1767
+      "sha256": "bed6137d4892aa14cc49fa582e48bff960d0c278f2d8c60f550d0d36d75bc1cb",
+      "size": 1619
     },
     {
       "path": "recipes/sugar-wash-classic.json",
-      "sha256": "a9ffd69062602a882908cd8c9c2b8671c36dff4542c7286a1ed8b99ff67578b7",
-      "size": 1420
+      "sha256": "dc544bb0fd9345c5c7dc2f6c2b925c667d3b855525ad3e9e5b66fcf28ac4acc9",
+      "size": 1278
     },
     {
       "path": "recipes/sugar-wash-spirit-yeast.json",
-      "sha256": "b3541c5f4a7e1dd800c284ce2ce84553348aac398f72525074e06e742e3b0436",
-      "size": 1559
+      "sha256": "fe49a9e6b94e903866513cdc2ad3b0083c65a141d1e8cdff2ca511d23225f42b",
+      "size": 1384
     },
     {
       "path": "recipes/sugar-wash-turbo.json",
-      "sha256": "3820b64b73a58fc8f50fe222ca26387b37ab954006ed884af4a31930cbc6842d",
-      "size": 1361
+      "sha256": "686d4fb3d6e48bc4b155249dd31db944ee68ec87f618fbfc22e7a67e88593240",
+      "size": 1186
     },
     {
       "path": "recipes/wheat-sour-starter.json",
-      "sha256": "48bcd02a8713106fa72832296ec55c094dc03e654ae00db6003686272e6e310b",
-      "size": 1353
+      "sha256": "25191dea4dfc3c10616f7f6c619848954a14972789b7576df188763bf365d9db",
+      "size": 1213
     },
     {
       "path": "recipes/wine-to-distillate.json",
-      "sha256": "74f94c90786c41c2e9300e0d371f43f27cf46fa9e8332e83a6bcb6bf5da34aa5",
-      "size": 1448
+      "sha256": "73b4000f33ed220c55025c09713c5642c0005051752198e62bb3b7a25309334d",
+      "size": 1204
     },
     {
       "path": "redirects.json",
-      "sha256": "98d70ca09608807004d01104add9a34a2e37442ad5bc3771703b2da810edeb17",
-      "size": 2112
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "size": 3
     },
     {
       "path": "reference/enzymes.json",
@@ -83,181 +83,26 @@
     },
     {
       "path": "search/index.json",
-      "sha256": "c9d7a12daed52ab57e0ef97cf29b3e787ac854297c3ccbe323c721cf0472a33c",
-      "size": 133298
+      "sha256": "d31770fd96258043c894c9c5222e5554bac6eeae8e65bb0a6fbe89e34a38896d",
+      "size": 6800
     },
     {
       "path": "tree.json",
-      "sha256": "56159d84b33f584bf73b74d269b7439eaebab8405ffbbd746b0d75188c69e412",
-      "size": 3474
+      "sha256": "2e01efbba7561880732069778a2a110ed2fa179f1867a7ce0f4ab79060089540",
+      "size": 3295
     },
     {
-      "path": "wiki/equipment/airlock.md",
-      "sha256": "c6cd6d3006a38cbdafc44106d94c183059077dd4a5135fae2bfb456093146b53",
-      "size": 6473
+      "path": "wiki/articles/areometr-saharomer.md",
+      "sha256": "e38465e193c01247d4255541c93b84aef648bdf40a0b3a2972f7afa01be38323",
+      "size": 3020
     },
     {
-      "path": "wiki/equipment/condenser.md",
-      "sha256": "3b5993420a9b9fbd103efd8f00969a767fb844fc75552d7d4401e79fb99d3d25",
-      "size": 725
-    },
-    {
-      "path": "wiki/equipment/dephlegmator.md",
-      "sha256": "8fda92d4ccc20de28594f4ff03cf51c7ebc9bbc58a2442ccb50c0a3e7c30a109",
-      "size": 919
-    },
-    {
-      "path": "wiki/equipment/measurements.md",
-      "sha256": "8fb349fdf5e6806fa43d82fd2988c8ee87d2eeaf0f1c7760255afe211b1e16e2",
-      "size": 7990
-    },
-    {
-      "path": "wiki/equipment/parrot.md",
-      "sha256": "a7a4cb3c2f055df0e53408e01c60ee93730333ec1fe80e411e965bc4a7139158",
-      "size": 2255
-    },
-    {
-      "path": "wiki/equipment/still-pot.md",
-      "sha256": "897e4ebb2305c3e4fd892d687b10698c229e2bd68011137070017e7e8caac39f",
-      "size": 953
-    },
-    {
-      "path": "wiki/problems/high-acidity.md",
-      "sha256": "d543fade6b688c8568350a90869de032edee85443c1ac9eee1d0b431335cf212",
-      "size": 736
-    },
-    {
-      "path": "wiki/problems/low-abv.md",
-      "sha256": "cfcb63e73d1763aa5b2af5534629946a26337cbbc9f7f585462a70e473fe19b7",
-      "size": 615
-    },
-    {
-      "path": "wiki/problems/no-bubbles.md",
-      "sha256": "692b1b4af18400e65f0239f0a80a8064b94251cca65c85c3fbe4995496769687",
-      "size": 2921
-    },
-    {
-      "path": "wiki/problems/off-flavour.md",
-      "sha256": "780ba2fe80a0c7f9e33cc6eedd68bf4e2cd2ba134fca02dfc29b927787fca664",
-      "size": 814
-    },
-    {
-      "path": "wiki/problems/stuck-ferment.md",
-      "sha256": "e302c7c1290288a2354b7715c4a4e764811d7caee40c37202ccbc4af34b228e0",
-      "size": 14812
-    },
-    {
-      "path": "wiki/processes/beer/simple-brew.md",
-      "sha256": "b4b1e5efd323767f5f6a6ec7e4ee4b2133ec676722e20b3028dfd805ca05731a",
-      "size": 981
-    },
-    {
-      "path": "wiki/processes/ferment/primary.md",
-      "sha256": "973696362e77c386b57dab8d2f8cd0c910e918c746996b5941b3c34335cd90b4",
-      "size": 950
-    },
-    {
-      "path": "wiki/processes/finish/dilution.md",
-      "sha256": "ca16b2e98ccc36bdd7308e2974d71458dd7af72c17a0061bc868b742cfb01e87",
-      "size": 1057
-    },
-    {
-      "path": "wiki/processes/finish/fining.md",
-      "sha256": "80fa2d0db5856b0b3ca4e67abd4222ccd0dc7f9a14048329f90576516b708376",
-      "size": 744
-    },
-    {
-      "path": "wiki/processes/prepare/grape.md",
-      "sha256": "44c15b868126a042356bba0cbe917ad4647fe66a3fab88e665097a360ad1399a",
-      "size": 1109
-    },
-    {
-      "path": "wiki/processes/separate/first-run.md",
-      "sha256": "d48a7de40e319c7eee23e0f7961a8ece0e784905267d9350d4e81b2edc274561",
-      "size": 3067
-    },
-    {
-      "path": "wiki/processes/separate/fractional.md",
-      "sha256": "f7a6f5175f6657f77243f0864510997139c0549468244f049670894287cfaa8e",
-      "size": 795
-    },
-    {
-      "path": "wiki/processes/separate/heads-hearts-tails.md",
-      "sha256": "4d682b5098ac37566de9529e4d04395bcd897ece284f72f0793be907154fba45",
-      "size": 5092
-    },
-    {
-      "path": "wiki/processes/separate/racking.md",
-      "sha256": "86a249a6b792534fe6f1f4527ff8531e19f108de3df610e7b21b2bf2bf0a0631",
-      "size": 875
-    },
-    {
-      "path": "wiki/processes/separate/second-run-column.md",
-      "sha256": "630e1a1a9e3fcedbe1192dad7dd41f854761b6d58d1d8acdff95b9d4e9174616",
-      "size": 18332
-    },
-    {
-      "path": "wiki/processes/separate/second-run-pot.md",
-      "sha256": "34619861adefdcc7bd83b388e9d68d88a28df734bd50408212c87568f45349e0",
-      "size": 3167
-    },
-    {
-      "path": "wiki/raw/distiller-yeast.md",
-      "sha256": "419f7fef22528c1d7aeb0cf1b2b217b8c5c0f1d3bafc793dc80a07f787185af8",
-      "size": 7039
-    },
-    {
-      "path": "wiki/raw/sugar-glucose.md",
-      "sha256": "3ca3984b2140bfd5bdc185e639b571507c92865bfc6211bab98ed79dd46dea1c",
-      "size": 868
-    },
-    {
-      "path": "wiki/raw/yeast.md",
-      "sha256": "d91b9746df5bd336329a2dd795eccad89b9b8f1cae2150df0498e7fddfc8020e",
-      "size": 1023
-    },
-    {
-      "path": "wiki/recipes/apple-wine-sweet.md",
-      "sha256": "387e235aa1bc6385ad9f0a93aaaf910920db0e6ec9d192d00fce7f3905aa07b5",
-      "size": 12188
-    },
-    {
-      "path": "wiki/recipes/cider-25.md",
-      "sha256": "33dc5b103abda126c7ae106dcef08df75e72062757a558d263b4ab76f8353100",
-      "size": 10812
-    },
-    {
-      "path": "wiki/recipes/sugar-wash-classic.md",
-      "sha256": "93eaad1aaf0bc9841bb160d31e580395758a4d1ccb820f7519a5b32244adc6be",
-      "size": 951
-    },
-    {
-      "path": "wiki/recipes/sugar-wash-spirit-yeast.md",
-      "sha256": "6305e51d2ae275939fc9b6ce77dc89652c52052587e3195abe6f4bc857de21af",
-      "size": 4471
-    },
-    {
-      "path": "wiki/recipes/sugar-wash-turbo.md",
-      "sha256": "ab88a6b04b92fd09711e0f2a4b7bb639b70a5444271e842dcceac3bb95b8877d",
-      "size": 5780
-    },
-    {
-      "path": "wiki/recipes/wheat-sour-starter.md",
-      "sha256": "63547c4c89aa99a0152001bb427ea7a920e6b326f483a872936d05b282eb37a2",
-      "size": 6879
-    },
-    {
-      "path": "wiki/recipes/wine-to-distillate.md",
-      "sha256": "947ec28aab157ca3961ce90c5b6530b753836b51d7f84fb4964eef49b1a1f033",
-      "size": 4212
-    },
-    {
-      "path": "wiki/reference/hydrometer-temp.md",
-      "sha256": "54e83a53d16338d4a048d3d63a49c67ad53fb98bb98dab180cfba6a3bc546aa2",
-      "size": 3049
+      "path": "wiki/articles/areometr-spirtomer.md",
+      "sha256": "52e4d0dcf074b2512616d1b91a1141d622c4862854e9a51a8c1fe0666c774c12",
+      "size": 3423
     }
   ],
   "searchIndex": "search/index.json",
-  "searchIndexSha256": "c9d7a12daed52ab57e0ef97cf29b3e787ac854297c3ccbe323c721cf0472a33c",
+  "searchIndexSha256": "d31770fd96258043c894c9c5222e5554bac6eeae8e65bb0a6fbe89e34a38896d",
   "redirects": "redirects.json"
 }

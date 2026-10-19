@@ -28,12 +28,12 @@ class EmbeddedContentTest {
         val installer = ContentInstaller(temp.newFolder("files"), BuildConfig.VERSION_NAME)
         val content = installer.ensureInstalled(pack, manifest)
 
-        assertEquals("2026.10.8", content.state.contentVersion)
+        assertEquals("2026.10.10", content.state.contentVersion)
         assertEquals(1, content.state.schemaVersion)
-        assertEquals(33, content.validation?.articles)
-        assertEquals(78, content.validation?.links)
-        assertEquals(33, content.validation?.redirects)
-        assertEquals(50, content.validation?.files)
+        assertEquals(2, content.validation?.articles)
+        assertEquals(1, content.validation?.links)
+        assertEquals(0, content.validation?.redirects)
+        assertEquals(19, content.validation?.files)
         assertTrue(File(temp.root, "files/content/current/search/index.json").isFile)
     }
 }

@@ -78,6 +78,44 @@ class WikiTreeConfigTest {
     }
 
     @Test
+    fun sameArticleCanAppearInMultipleConfiguredSections() {
+        val config = WikiTreeParser.parse(
+            """
+            {
+              "schemaVersion": 1,
+              "roots": [
+                {
+                  "id": "one",
+                  "title": "Первый",
+                  "articles": ["one/first"],
+                  "children": []
+                },
+                {
+                  "id": "two",
+                  "title": "Второй",
+                  "articles": ["one/first", "two/second"],
+                  "children": []
+                }
+              ]
+            }
+            """.trimIndent(),
+        )!!
+        val roots = WikiTree.build(articles, config)
+
+        assertEquals(listOf("Первый", "Второй", "Без раздела"), roots.map { it.title })
+        assertEquals(listOf("Первая"), roots[0].children.map { it.title })
+        assertEquals(listOf("Первая", "Вторая"), roots[1].children.map { it.title })
+        assertEquals(1, roots[0].count)
+        assertEquals(2, roots[1].count)
+        assertEquals(listOf("Третья"), roots[2].children.map { it.title })
+
+        val keys = roots.flatMap { root ->
+            listOf(root.key) + root.children.map { it.key }
+        }
+        assertEquals(keys.size, keys.toSet().size)
+    }
+
+    @Test
     fun keepsEmptyConfiguredSectionsVisible() {
         val config = WikiTreeParser.parse(
             """

@@ -48,7 +48,9 @@ object WikiTree {
     /**
      * Строит дерево из `tree.json`, а без него — по путям старых id.
      * Конфигурация дерева авторитетна: даже пустые разделы сохраняются,
-     * чтобы автор видел и мог наполнять созданную им структуру.
+     * чтобы автор видел и мог наполнять созданную им структуру. Одна и та же
+     * статья может стоять в нескольких разделах — это навигационные входы,
+     * а не копии текста.
      */
     fun build(articles: List<Article>, config: WikiTreeConfig? = null): List<WikiNode> {
         if (config != null) return buildConfigured(articles, config)
@@ -60,14 +62,14 @@ object WikiTree {
         config: WikiTreeConfig,
     ): List<WikiNode> {
         val byId = articles.associateBy { it.id }
-        val used = LinkedHashSet<String>()
+        val placed = LinkedHashSet<String>()
 
         fun sectionNode(section: WikiTreeSection, depth: Int): WikiNode? {
             if (depth > 4) return null
-            val direct = section.articles.mapNotNull { id ->
+            val direct = section.articles.distinct().mapNotNull { id ->
                 val article = byId[id] ?: return@mapNotNull null
-                if (!used.add(id)) return@mapNotNull null
-                leaf(article)
+                placed.add(id)
+                leaf(article, section.id)
             }
             val children = section.children.mapNotNull { child ->
                 sectionNode(child, depth + 1)
@@ -83,13 +85,13 @@ object WikiTree {
 
         val roots = config.roots.mapNotNull { sectionNode(it, depth = 1) }.toMutableList()
         val unplaced = articles
-            .filterNot { it.id in used }
+            .filterNot { it.id in placed }
             .sortedBy { it.title.lowercase() }
         if (unplaced.isNotEmpty()) {
             roots += WikiNode(
                 key = "section:__unplaced",
                 title = "Без раздела",
-                children = unplaced.map(::leaf),
+                children = unplaced.map { leaf(it, "__unplaced") },
                 articleIds = unplaced.map { it.id },
             )
         }
@@ -107,7 +109,8 @@ object WikiTree {
             val children = if (rootSlug == "processes") {
                 buildProcessGroups(inRoot)
             } else {
-                inRoot.sortedBy { it.title.lowercase() }.map(::leaf)
+                inRoot.sortedBy { it.title.lowercase() }
+                    .map { leaf(it, "root:$rootSlug") }
             }
             WikiNode(
                 key = "root:$rootSlug",
@@ -125,7 +128,8 @@ object WikiTree {
         return slugs.mapNotNull { slug ->
             val inGroup = groups[slug].orEmpty()
             if (inGroup.isEmpty()) return@mapNotNull null
-            val leaves = inGroup.sortedBy { it.title.lowercase() }.map(::leaf)
+            val leaves = inGroup.sortedBy { it.title.lowercase() }
+                .map { leaf(it, "group:processes/$slug") }
             WikiNode(
                 key = "group:processes/$slug",
                 title = WikiLabels.processGroup(slug),
@@ -135,8 +139,8 @@ object WikiTree {
         }
     }
 
-    private fun leaf(article: Article) = WikiNode(
-        key = "article:${article.id}",
+    private fun leaf(article: Article, scope: String) = WikiNode(
+        key = "article:$scope/${article.id}",
         title = article.title,
         articleId = article.id,
         articleIds = listOf(article.id),

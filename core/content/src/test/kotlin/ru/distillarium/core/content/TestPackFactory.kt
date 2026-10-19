@@ -29,6 +29,7 @@ object TestPackFactory {
         secondArticleTitle: String = "Две",
         brokenLink: Boolean = false,
         includeManifest: Boolean = true,
+        treeJson: String? = null,
     ): TestPack {
         val source = File(root, "source-$version")
         source.deleteRecursively()
@@ -76,6 +77,10 @@ object TestPackFactory {
             }
             """.trimIndent(),
         )
+
+        if (treeJson != null) {
+            write(File(source, "tree.json"), treeJson)
+        }
 
         val files = source.walkTopDown()
             .filter { it.isFile && it.name != "manifest.json" }

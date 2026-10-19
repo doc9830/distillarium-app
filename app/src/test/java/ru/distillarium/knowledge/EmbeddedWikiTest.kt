@@ -26,34 +26,33 @@ class EmbeddedWikiTest {
         )
         val library = WikiLoader.load(File(temp.root, "files/content/current"))
 
-        assertEquals("2026.10.8", library.contentVersion)
-        assertEquals(33, library.articles.size)
-        assertEquals(7, library.roots.size)
+        assertEquals("2026.10.10", library.contentVersion)
+        assertEquals(2, library.articles.size)
+        assertEquals(4, library.roots.size)
         assertEquals(
-            listOf(
-                "Самогоноварение",
-                "Виноделие",
-                "Пивоварение",
-                "Оборудование",
-                "Рецепты",
-                "Проблемы",
-                "Справочник",
-            ),
+            listOf("Самогоноварение", "Виноделие", "Пивоварение", "Оборудование"),
             library.roots.map { it.title },
         )
-        assertEquals(33, library.redirects.size)
+        assertEquals(0, library.redirects.size)
         assertEquals(6, library.referenceTables.size)
-        assertTrue(library.tags.isEmpty())
+        assertEquals(7, library.tags.size)
+        assertTrue(library.tags.any { it.label == "ареометр" })
         assertTrue(library.tags.none { it.label == "Оборудование" })
+
         assertEquals(
-            "Самогоноварение / Инструкции / Колонна с дефлегматором / " +
-                "Отбор голов, тела и хвостов",
-            library.breadcrumb("processes/separate/heads-hearts-tails"),
+            "Самогоноварение / Оборудование / Ареометр-сахаромер",
+            library.breadcrumb("articles/areometr-saharomer"),
+        )
+        assertEquals(
+            "Самогоноварение / Оборудование / Ареометр-спиртомер",
+            library.breadcrumb("articles/areometr-spirtomer"),
         )
 
-        library.redirects.values.forEach { target ->
-            assertTrue("редирект ведёт в пустоту: $target", library.resolve(target) != null)
-        }
+        val leaves = collectLeaves(library.roots)
+        assertEquals(2, leaves.count { it.articleId == "articles/areometr-saharomer" })
+        assertEquals(2, leaves.count { it.articleId == "articles/areometr-spirtomer" })
+        assertEquals(leaves.size, leaves.map { it.key }.toSet().size)
+
         library.articles.flatMap { article -> WikiLinks.targets(article.body) }
             .forEach { target ->
                 when {
@@ -69,25 +68,16 @@ class EmbeddedWikiTest {
                 }
             }
 
-        val measurements = requireNotNull(library.article("equipment/measurements")) {
-            "нет статьи про измерения"
+        val sugarMeter = requireNotNull(library.article("articles/areometr-saharomer")) {
+            "нет статьи про сахаромер"
         }
-        assertEquals(measurements, library.resolve("/articles/areometr"))
-
-        val synonymResults = library.search("сивушные")
-        assertTrue(synonymResults.any { it.article.id == "problems/off-flavour" })
-        val sugarMeterResults = library.search("сахаромер")
-        assertTrue(sugarMeterResults.any { it.article.id == "equipment/measurements" })
-
-        val heads = requireNotNull(library.article("processes/separate/heads-hearts-tails")) {
-            "нет статьи про фракции"
-        }
-        assertTrue(heads.headings.any { it.title == "Коротко" })
-        assertEquals(3, heads.segments.filterIsInstance<ArticleSegment.Tabs>().single().tabs.size)
+        assertTrue(sugarMeter.headings.any { it.title.startsWith("Ареометр-сахаромер") })
+        assertTrue(library.search("сахаромер").any { it.article.id == sugarMeter.id })
         assertTrue(
-            library.backlinks("processes/separate/heads-hearts-tails")
-                .any { it.id == "problems/off-flavour" },
+            library.search("спиртомер")
+                .any { it.article.id == "articles/areometr-spirtomer" },
         )
+        assertTrue(library.backlinks(sugarMeter.id).isEmpty())
 
         val recipes = RecipeLoader.load(File(temp.root, "files/content/current"))
         assertEquals(7, recipes.size)
@@ -100,5 +90,10 @@ class EmbeddedWikiTest {
                 )
             }
         }
+    }
+
+    /** Заодно проверяет, что повтор статьи в разных разделах даёт разные ключи. */
+    private fun collectLeaves(nodes: List<WikiNode>): List<WikiNode> = nodes.flatMap { node ->
+        listOfNotNull(node.takeIf { it.articleId != null }) + collectLeaves(node.children)
     }
 }
