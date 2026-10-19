@@ -49,31 +49,59 @@ class WikiTreeConfigTest {
     @Test
     fun breadcrumbFollowsConfiguredTree() {
         val config = WikiTreeParser.parse(configJson)!!
+        val roots = WikiTree.build(articles, config)
         val library = WikiLibrary(
             articles = articles,
             redirects = emptyMap(),
-            roots = WikiTree.build(articles, config),
-            tags = WikiTree.tags(articles, WikiTree.build(articles, config)),
+            roots = roots,
+            tags = WikiTree.tags(articles),
         )
         assertEquals("Корень / Раздел / Вторая", library.breadcrumb("two/second"))
         assertEquals("Без раздела / Третья", library.breadcrumb("three/third"))
     }
 
     @Test
-    fun tagFilterUsesConfiguredRootTitles() {
+    fun tagsComeOnlyFromExplicitArticleTags() {
+        val tagged = articles.map { article ->
+            if (article.id == "one/first") article.copy(tags = listOf("для новичка")) else article
+        }
         val config = WikiTreeParser.parse(configJson)!!
-        val roots = WikiTree.build(articles, config)
         val library = WikiLibrary(
-            articles = articles,
+            articles = tagged,
             redirects = emptyMap(),
-            roots = roots,
-            tags = WikiTree.tags(articles, roots),
+            roots = WikiTree.build(tagged, config),
+            tags = WikiTree.tags(tagged),
         )
 
-        val rootMatches = library.search("Первая", WikiTags.key("Корень"))
-            .map { it.article.id }
-        assertEquals(listOf("one/first"), rootMatches)
-        assertTrue(library.search("Первая", WikiTags.key("Без раздела")).isEmpty())
+        assertEquals(listOf("для новичка"), library.tags.map { it.label })
+        assertTrue(library.search("Первая", WikiTags.key("Корень")).isEmpty())
+    }
+
+    @Test
+    fun keepsEmptyConfiguredSectionsVisible() {
+        val config = WikiTreeParser.parse(
+            """
+            {
+              "schemaVersion": 1,
+              "roots": [
+                {
+                  "id": "empty-root",
+                  "title": "Пустой раздел",
+                  "articles": [],
+                  "children": [
+                    {"id": "empty-root/child", "title": "Пустой подраздел", "articles": []}
+                  ]
+                }
+              ]
+            }
+            """.trimIndent(),
+        )!!
+        val roots = WikiTree.build(articles, config)
+
+        assertEquals(listOf("Пустой раздел", "Без раздела"), roots.map { it.title })
+        assertEquals(listOf("Пустой подраздел"), roots[0].children.map { it.title })
+        assertEquals(0, roots[0].count)
+        assertEquals(3, roots[1].count)
     }
 
     @Test

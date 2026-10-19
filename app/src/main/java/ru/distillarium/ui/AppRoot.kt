@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.distillarium.R
@@ -151,6 +153,12 @@ fun DistillariumRoot(
         ) {
             knowledgeViewModel.refresh()
         }
+    }
+
+    // После публикации контента возвращение в приложение сразу проверяет обновления,
+    // не дожидаясь повторного запуска процесса.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        updatesViewModel.checkUpdates(silent = true)
     }
 
     if (currentRoute != null) {

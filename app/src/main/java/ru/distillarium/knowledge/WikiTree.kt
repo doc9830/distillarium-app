@@ -45,12 +45,13 @@ object WikiLabels {
 }
 
 object WikiTree {
-    /** Строит дерево из `tree.json`, а без него — по путям старых id. */
+    /**
+     * Строит дерево из `tree.json`, а без него — по путям старых id.
+     * Конфигурация дерева авторитетна: даже пустые разделы сохраняются,
+     * чтобы автор видел и мог наполнять созданную им структуру.
+     */
     fun build(articles: List<Article>, config: WikiTreeConfig? = null): List<WikiNode> {
-        if (config != null) {
-            val configured = buildConfigured(articles, config)
-            if (configured.isNotEmpty()) return configured
-        }
+        if (config != null) return buildConfigured(articles, config)
         return buildByPath(articles)
     }
 
@@ -72,7 +73,6 @@ object WikiTree {
                 sectionNode(child, depth + 1)
             }
             val nodes = direct + children
-            if (nodes.isEmpty()) return null
             return WikiNode(
                 key = "section:${section.id}",
                 title = section.title,
@@ -142,23 +142,10 @@ object WikiTree {
         articleIds = listOf(article.id),
     )
 
-    fun tags(
-        articles: List<Article>,
-        roots: List<WikiNode> = emptyList(),
-    ): List<WikiTag> {
-        val rootByArticle = HashMap<String, String>()
-        fun collect(nodes: List<WikiNode>, rootTitle: String?) {
-            for (node in nodes) {
-                val top = rootTitle ?: node.title
-                node.articleId?.let { rootByArticle[it] = top }
-                collect(node.children, top)
-            }
-        }
-        collect(roots, null)
-
+    fun tags(articles: List<Article>): List<WikiTag> {
         val counts = LinkedHashMap<String, Pair<String, Int>>()
         for (article in articles) {
-            for (label in WikiTags.tagsFor(article, rootByArticle[article.id])) {
+            for (label in WikiTags.explicit(article)) {
                 val key = WikiTags.key(label)
                 val current = counts[key]
                 counts[key] = if (current == null) label to 1 else current.first to current.second + 1

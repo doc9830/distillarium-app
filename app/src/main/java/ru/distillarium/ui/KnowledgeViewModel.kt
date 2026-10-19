@@ -66,7 +66,7 @@ class KnowledgeViewModel(application: Application) : AndroidViewModel(applicatio
                     val expanded = if (clear || current.library == null) {
                         defaultExpanded(library)
                     } else {
-                        current.expanded
+                        current.expanded + library.roots.map { it.key }
                     }
                     val roots = library.rootsFor(tag)
                     current.copy(

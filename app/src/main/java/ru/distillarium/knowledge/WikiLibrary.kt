@@ -41,17 +41,8 @@ class WikiLibrary(
     private val byId = articles.associateBy { it.id }
     private val referenceById = referenceTables.associateBy { it.id }
     private val tagKeysByArticle: Map<String, Set<String>> by lazy {
-        val rootTitles = HashMap<String, String>()
-        fun collect(nodes: List<WikiNode>, root: String?) {
-            for (node in nodes) {
-                val title = root ?: node.title
-                node.articleId?.let { rootTitles[it] = title }
-                collect(node.children, title)
-            }
-        }
-        collect(roots, null)
         articles.associate { article ->
-            article.id to WikiTags.tagsFor(article, rootTitles[article.id])
+            article.id to WikiTags.explicit(article)
                 .map { WikiTags.key(it) }
                 .toSet()
         }
@@ -199,9 +190,14 @@ object WikiLinks {
 }
 
 object WikiTags {
+    /** Теги, которые автор явно указал в статье. Только они попадают в фильтр. */
+    fun explicit(article: Article): List<String> =
+        article.tags.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+
+    /** Теги плюс устаревшие категория и корень: используются только поиском. */
     fun tagsFor(article: Article, rootLabel: String? = null): List<String> {
         val result = LinkedHashSet<String>()
-        article.tags.forEach { if (it.isNotBlank()) result += it.trim() }
+        explicit(article).forEach(result::add)
         WikiLabels.category(article.category)
             ?.takeIf { it.isNotBlank() }
             ?.let(result::add)

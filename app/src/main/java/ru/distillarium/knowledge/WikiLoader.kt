@@ -37,7 +37,7 @@ object WikiLoader {
             articles = articles,
             redirects = redirects,
             roots = roots,
-            tags = WikiTree.tags(articles, roots),
+            tags = WikiTree.tags(articles),
             referenceTables = referenceTables,
             contentVersion = manifest?.contentVersion,
             released = manifest?.released,

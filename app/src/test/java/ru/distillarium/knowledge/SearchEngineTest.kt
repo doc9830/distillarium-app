@@ -10,6 +10,7 @@ class SearchEngineTest {
             id = "problems/off-flavour",
             title = "Неприятный запах",
             category = "problemy-i-resheniya",
+            tags = listOf("проблемы"),
             body = "Неприятный запах обычно вызван сивушными маслами. Нужен отбор хвостов.",
         ),
         article(
@@ -60,10 +61,11 @@ class SearchEngineTest {
     }
 
     @Test
-    fun filtersByDerivedTag() {
+    fun filtersByExplicitTag() {
         val tagged = library.search("запах", "проблемы")
         assertEquals(listOf("problems/off-flavour"), tagged.map { it.article.id })
         assertTrue(library.search("запах", "вино").none { it.article.id == "problems/off-flavour" })
+        assertTrue(library.tags.none { it.key == "вино" })
     }
 
     @Test
@@ -102,13 +104,14 @@ class SearchEngineTest {
         id: String,
         title: String,
         category: String,
+        tags: List<String> = emptyList(),
         body: String,
     ) = Article(
         id = id,
         title = title,
         short = "",
         category = category,
-        tags = emptyList(),
+        tags = tags,
         tech = emptyList(),
         equipment = emptyList(),
         updated = null,

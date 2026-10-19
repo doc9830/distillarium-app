@@ -17,31 +17,56 @@ class HttpContentClient(
 ) : ManifestFetcher, PackDownloader {
     override fun fetch(url: String, etag: String?): ManifestResponse {
         requireHttps(url)
-        val builder = Request.Builder()
-            .url(url)
-            .header("Accept", "application/json")
-            .header("User-Agent", userAgent)
-            .header("Cache-Control", "no-cache")
-        etag?.takeIf { it.isNotBlank() }?.let { builder.header("If-None-Match", it) }
-        client.newCall(builder.build()).execute().use { response ->
+        client.newCall(manifestRequest(url, etag, "no-cache")).execute().use { response ->
             when (response.code) {
-                304 -> return ManifestResponse.NotModified
-                200 -> {
-                    val body = response.body
-                        ?: throw ContentException("Сервер вернул пустой манифест")
-                    if (body.contentLength() > MAX_MANIFEST_BYTES) {
-                        throw ContentException("Манифест обновлений слишком большой")
-                    }
-                    val bytes = body.byteStream().use { input ->
-                        readLimited(input, MAX_MANIFEST_BYTES)
-                    }
-                    return ManifestResponse.Fresh(bytes, response.header("ETag"))
-                }
+                304 -> return fetchUnconditional(url)
+                200 -> return response.freshManifest()
                 else -> throw ContentException(
                     "Сервер обновлений ответил кодом ${response.code}",
                 )
             }
         }
+    }
+
+    /**
+     * Некоторые CDN продолжают отдавать 304 на старый ETag после перезаписи
+     * ассета релиза. Повторный запрос без условия гарантирует, что приложение
+     * увидит опубликованный манифест, а не застрянет на предыдущей версии.
+     */
+    private fun fetchUnconditional(url: String): ManifestResponse {
+        client.newCall(manifestRequest(url, etag = null, cacheControl = "no-store"))
+            .execute()
+            .use { response ->
+                return when (response.code) {
+                    200 -> response.freshManifest()
+                    304 -> ManifestResponse.NotModified
+                    else -> throw ContentException(
+                        "Сервер обновлений ответил кодом ${response.code}",
+                    )
+                }
+            }
+    }
+
+    private fun manifestRequest(url: String, etag: String?, cacheControl: String): Request {
+        val builder = Request.Builder()
+            .url(url)
+            .header("Accept", "application/json")
+            .header("User-Agent", userAgent)
+            .header("Cache-Control", cacheControl)
+            .header("Pragma", "no-cache")
+        etag?.takeIf { it.isNotBlank() }?.let { builder.header("If-None-Match", it) }
+        return builder.build()
+    }
+
+    private fun okhttp3.Response.freshManifest(): ManifestResponse {
+        val body = body ?: throw ContentException("Сервер вернул пустой манифест")
+        if (body.contentLength() > MAX_MANIFEST_BYTES) {
+            throw ContentException("Манифест обновлений слишком большой")
+        }
+        val bytes = body.byteStream().use { input ->
+            readLimited(input, MAX_MANIFEST_BYTES)
+        }
+        return ManifestResponse.Fresh(bytes, header("ETag"))
     }
 
     override fun download(

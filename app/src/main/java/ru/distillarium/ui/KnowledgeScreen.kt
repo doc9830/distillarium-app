@@ -1,14 +1,13 @@
 package ru.distillarium.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -119,13 +119,11 @@ fun KnowledgeScreen(
             )
             if (state.mode == KnowledgeMode.Articles) {
                 state.library?.let { library ->
-                    if (state.selectedTag != null) {
-                        CategoryTrail(
-                            library = library,
-                            selectedTag = state.selectedTag,
-                            onAllCategories = { onSelectTag(null) },
-                        )
-                    }
+                    TagFilterRow(
+                        tags = library.tags,
+                        selectedTag = state.selectedTag,
+                        onSelectTag = onSelectTag,
+                    )
                 }
             }
             when {
@@ -230,99 +228,82 @@ private fun ModeSegment(
 }
 
 @Composable
-private fun CategoryTrail(
-    library: WikiLibrary,
-    selectedTag: String,
-    onAllCategories: () -> Unit,
+private fun TagFilterRow(
+    tags: List<WikiTag>,
+    selectedTag: String?,
+    onSelectTag: (String?) -> Unit,
 ) {
-    val tag = library.tags.firstOrNull { it.key == selectedTag }
+    if (tags.isEmpty()) return
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        TextButton(onClick = onAllCategories) {
-            Text(stringResource(R.string.knowledge_all_categories))
+        TagChip(
+            text = stringResource(R.string.knowledge_all_tags),
+            count = null,
+            selected = selectedTag == null,
+            onClick = { onSelectTag(null) },
+        )
+        tags.forEach { tag ->
+            TagChip(
+                text = tag.label,
+                count = tag.count,
+                selected = tag.key == selectedTag,
+                onClick = { onSelectTag(tag.key) },
+            )
         }
-        Text(
-            text = "/",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.outline,
-        )
-        Text(
-            text = tag?.label ?: selectedTag,
-            modifier = Modifier.padding(start = 8.dp),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
 @Composable
-private fun CategoryTile(
-    tag: WikiTag,
-    modifier: Modifier = Modifier,
+private fun TagChip(
+    text: String,
+    count: Int?,
+    selected: Boolean,
     onClick: () -> Unit,
 ) {
-    Card(
+    Surface(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 138.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(50),
+        color = if (selected) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow
+        },
+        contentColor = if (selected) {
+            MaterialTheme.colorScheme.onSecondaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
         ),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            ) {
-                Icon(
-                    painter = painterResource(categoryIcon(tag.key)),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(9.dp)
-                        .size(24.dp),
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 1,
+            )
+            if (count != null) {
+                Text(
+                    text = count.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Text(
-                text = tag.label,
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = stringResource(R.string.knowledge_category_articles, tag.count),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
 
-private fun categoryIcon(key: String): Int {
-    val normalized = key.lowercase(Locale.ROOT)
-    return when {
-        "оборуд" in normalized -> R.drawable.ic_calc_thermostat
-        "сырь" in normalized || "ингредиент" in normalized || "вино" in normalized ->
-            R.drawable.ic_calc_water_drop
-        "процесс" in normalized || "технолог" in normalized || "самогон" in normalized ->
-            R.drawable.ic_calc_science
-        "проблем" in normalized -> R.drawable.ic_calc_bubble_chart
-        "справоч" in normalized -> R.drawable.ic_calc_table_chart
-        "пиво" in normalized -> R.drawable.ic_calc_percent
-        else -> R.drawable.ic_calc_menu_book
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun KnowledgeContent(
     state: KnowledgeUiState,
@@ -429,177 +410,165 @@ private fun KnowledgeContent(
             return@LazyColumn
         }
 
-        if (state.selectedTag == null) {
-            item(key = "categories-header") {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.knowledge_categories_title),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = stringResource(R.string.knowledge_categories_text),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            if (library.tags.isEmpty()) {
-                item(key = "categories-empty") {
-                    EmptyMessage(
-                        title = stringResource(R.string.knowledge_empty_title),
-                        text = stringResource(R.string.knowledge_empty_text),
-                        action = stringResource(R.string.knowledge_retry),
-                        onAction = onRetry,
-                    )
-                }
-            } else {
-                items(
-                    items = library.tags.chunked(2),
-                    key = { row -> row.joinToString("|") { it.key } },
-                ) { row ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        row.forEach { tag ->
-                            CategoryTile(
-                                tag = tag,
-                                modifier = Modifier.weight(1f),
-                                onClick = { onSelectTag(tag.key) },
-                            )
-                        }
-                        if (row.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
-                }
-            }
-            return@LazyColumn
-        }
-
         if (state.roots.isEmpty()) {
             item(key = "tree-empty") {
                 EmptyMessage(
-                    title = stringResource(R.string.knowledge_tag_empty_title),
-                    text = stringResource(R.string.knowledge_tag_empty_text),
-                    action = stringResource(R.string.knowledge_all_categories),
-                    onAction = { onSelectTag(null) },
+                    title = stringResource(
+                        if (state.selectedTag == null) {
+                            R.string.knowledge_empty_title
+                        } else {
+                            R.string.knowledge_tag_empty_title
+                        },
+                    ),
+                    text = stringResource(
+                        if (state.selectedTag == null) {
+                            R.string.knowledge_empty_text
+                        } else {
+                            R.string.knowledge_tag_empty_text
+                        },
+                    ),
+                    action = stringResource(
+                        if (state.selectedTag == null) {
+                            R.string.knowledge_retry
+                        } else {
+                            R.string.knowledge_all_tags
+                        },
+                    ),
+                    onAction = if (state.selectedTag == null) {
+                        onRetry
+                    } else {
+                        { onSelectTag(null) }
+                    },
                 )
             }
             return@LazyColumn
         }
 
-        state.roots.forEach { root ->
-            if (state.roots.size > 1) {
-                stickyHeader(key = root.key) {
-                    CategoryRootHeader(root)
-                }
-            }
-            root.children.forEach { child ->
-                if (child.isArticle) {
-                    item(key = child.key) {
-                        ArticleRow(node = child, onClick = { onOpenArticle(child.articleId!!) })
-                    }
-                } else {
-                    item(key = child.key) {
-                        BranchRow(
-                            node = child,
-                            expanded = child.key in state.expanded,
-                            onClick = { onToggleExpanded(child.key) },
-                        )
-                    }
-                    if (child.key in state.expanded) {
-                        items(child.children, key = { it.key }) { leaf ->
-                            ArticleRow(
-                                node = leaf,
-                                onClick = { onOpenArticle(leaf.articleId!!) },
-                            )
-                        }
-                    }
-                }
+        items(
+            items = visibleTreeRows(state.roots, state.expanded),
+            key = { row -> row.node.key },
+        ) { row ->
+            val node = row.node
+            if (node.isArticle) {
+                ArticleRow(
+                    node = node,
+                    depth = row.depth,
+                    onClick = { onOpenArticle(node.articleId!!) },
+                )
+            } else {
+                SectionRow(
+                    node = node,
+                    depth = row.depth,
+                    expanded = node.key in state.expanded,
+                    onClick = { onToggleExpanded(node.key) },
+                )
             }
         }
     }
 }
 
+private data class TreeRow(
+    val node: WikiNode,
+    val depth: Int,
+)
+
+/** Разворачивает дерево в плоский список с учётом раскрытых разделов. */
+private fun visibleTreeRows(
+    roots: List<WikiNode>,
+    expanded: Set<String>,
+): List<TreeRow> {
+    val rows = ArrayList<TreeRow>()
+    fun visit(node: WikiNode, depth: Int) {
+        rows += TreeRow(node, depth)
+        if (!node.isArticle && node.key in expanded) {
+            node.children.forEach { child -> visit(child, depth + 1) }
+        }
+    }
+    roots.forEach { root -> visit(root, depth = 0) }
+    return rows
+}
+
 @Composable
-private fun CategoryRootHeader(node: WikiNode) {
-    Column {
+private fun SectionRow(
+    node: WikiNode,
+    depth: Int,
+    expanded: Boolean,
+    onClick: () -> Unit,
+) {
+    val hasChildren = node.children.isNotEmpty()
+    val root = depth == 0
+    Column(
+        modifier = if (root) {
+            Modifier.background(MaterialTheme.colorScheme.surfaceContainerLow)
+        } else {
+            Modifier
+        },
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                .heightIn(min = 54.dp)
-                .padding(start = 20.dp, end = 16.dp),
+                .heightIn(min = if (root) 54.dp else 44.dp)
+                .clickable(
+                    enabled = hasChildren,
+                    onClickLabel = if (hasChildren) {
+                        stringResource(
+                            if (expanded) {
+                                R.string.knowledge_tree_collapse
+                            } else {
+                                R.string.knowledge_tree_expand
+                            },
+                            node.title,
+                        )
+                    } else {
+                        null
+                    },
+                    onClick = onClick,
+                )
+                .padding(
+                    start = 20.dp + (depth * 16).dp,
+                    end = 16.dp,
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
                 text = node.title,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                style = if (root) {
+                    MaterialTheme.typography.titleMedium
+                } else {
+                    MaterialTheme.typography.bodyLarge
+                },
+                fontWeight = if (root) FontWeight.SemiBold else FontWeight.Normal,
             )
-            CountBadge(node.count)
-        }
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
-        )
-    }
-}
-
-@Composable
-private fun BranchRow(
-    node: WikiNode,
-    expanded: Boolean,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 46.dp)
-            .clickable(
-                onClickLabel = stringResource(
-                    if (expanded) {
-                        R.string.knowledge_tree_collapse
+            if (node.count > 0) {
+                CountBadge(node.count)
+            }
+            if (hasChildren) {
+                Icon(
+                    imageVector = if (expanded) {
+                        Icons.Filled.KeyboardArrowDown
                     } else {
-                        R.string.knowledge_tree_expand
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight
                     },
-                    node.title,
-                ),
-                onClick = onClick,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+        if (root) {
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
             )
-            .padding(start = 34.dp, end = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Text(
-            text = node.title,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        CountBadge(node.count)
-        Icon(
-            imageVector = if (expanded) {
-                Icons.Filled.KeyboardArrowDown
-            } else {
-                Icons.AutoMirrored.Filled.KeyboardArrowRight
-            },
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline,
-            modifier = Modifier.size(20.dp),
-        )
+        }
     }
 }
 
 @Composable
 private fun ArticleRow(
     node: WikiNode,
+    depth: Int,
     onClick: () -> Unit,
 ) {
     Row(
@@ -610,7 +579,7 @@ private fun ArticleRow(
                 onClickLabel = stringResource(R.string.knowledge_open_article, node.title),
                 onClick = onClick,
             )
-            .padding(start = 44.dp, end = 20.dp),
+            .padding(start = 24.dp + (depth * 16).dp, end = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(11.dp),
     ) {

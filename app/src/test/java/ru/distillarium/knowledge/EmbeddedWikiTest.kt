@@ -26,18 +26,28 @@ class EmbeddedWikiTest {
         )
         val library = WikiLoader.load(File(temp.root, "files/content/current"))
 
-        assertEquals("2026.10.5", library.contentVersion)
+        assertEquals("2026.10.8", library.contentVersion)
         assertEquals(33, library.articles.size)
-        assertEquals(4, library.roots.size)
+        assertEquals(7, library.roots.size)
         assertEquals(
-            listOf("Самогоноварение", "Виноделие", "Пивоварение", "Оборудование"),
+            listOf(
+                "Самогоноварение",
+                "Виноделие",
+                "Пивоварение",
+                "Оборудование",
+                "Рецепты",
+                "Проблемы",
+                "Справочник",
+            ),
             library.roots.map { it.title },
         )
         assertEquals(33, library.redirects.size)
         assertEquals(6, library.referenceTables.size)
-        assertTrue(library.tags.isNotEmpty())
+        assertTrue(library.tags.isEmpty())
+        assertTrue(library.tags.none { it.label == "Оборудование" })
         assertEquals(
-            "Самогоноварение / Перегонка / Отбор голов, тела и хвостов",
+            "Самогоноварение / Инструкции / Колонна с дефлегматором / " +
+                "Отбор голов, тела и хвостов",
             library.breadcrumb("processes/separate/heads-hearts-tails"),
         )
 

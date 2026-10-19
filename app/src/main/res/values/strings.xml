@@ -49,9 +49,10 @@
     <string name="knowledge_categories_title">Категории</string>
     <string name="knowledge_categories_text">Выберите тему. Статья может быть сразу в нескольких категориях.</string>
     <string name="knowledge_all_categories">Все категории</string>
+    <string name="knowledge_all_tags">Все теги</string>
     <string name="knowledge_category_articles">Статей в категории: %1$d</string>
-    <string name="knowledge_tag_empty_title">В этой категории пока нет статей</string>
-    <string name="knowledge_tag_empty_text">Вернитесь ко всем категориям и выберите другую тему.</string>
+    <string name="knowledge_tag_empty_title">В этом теге пока нет статей</string>
+    <string name="knowledge_tag_empty_text">Выберите другой тег или покажите всё дерево.</string>
     <string name="knowledge_retry">Попробовать снова</string>
     <string name="knowledge_empty_title">Статей пока нет</string>
     <string name="knowledge_empty_text">Проверьте обновления контента на вкладке «Обновления».</string>
